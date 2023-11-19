@@ -32,11 +32,11 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
         return result;
     }
 
-    private Boolean checkPage(String url){
-        Boolean result = false;
+    private String checkPage(String url){
+        String result = "";
         for(Site s: common.getSites()) {
             if (url.contains(s.getUrl())){
-                result = true;
+                result = s.getUrl();
             }
         };
         return result;
@@ -44,6 +44,7 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     @Transactional
     private Page getPage(SiteModel site, String url) throws IOException {
         String path = url.substring(site.getUrl().length());
+        System.out.println(path);
         List<Page> listFinded = common.getPageRepository().findPage(path);
         if (listFinded.size() != 0){
             Page oldPage = listFinded.get(0);
@@ -55,14 +56,13 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     }
     @Transactional
     private SiteModel getSiteModel(String url){
-        String mainUrl = CommonConfiguration.formatUrl(url);
-        List<SiteModel> listFinded = common.getSiteRepository().findSiteByUrl(mainUrl);
-        if (listFinded.size() == 0){
+        List<SiteModel> listFounded = common.getSiteRepository().findSiteByUrl(url);
+        if (listFounded.size() == 0){
             SiteModel site = new SiteModel(url);
             common.getSiteRepository().save(site);
             return site;
         } else {
-            return listFinded.get(0);
+            return listFounded.get(0);
         }
     }
 
@@ -70,9 +70,11 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     public CommonResponce add(String url) {
         url = decodeUrl(url);
         CommonResponce responce = new CommonResponce();
-        if (checkPage(url)) {
+        String siteUrl = checkPage(url);
+        System.out.println(siteUrl);
+        if (!(siteUrl.equals(""))) {
             try {
-                SiteModel siteModel = getSiteModel(url);
+                SiteModel siteModel = getSiteModel(siteUrl);
                 Page page = getPage(siteModel, url);
                 Lemmatization lemmatization = new Lemmatization(page, common);
                 lemmatization.run();

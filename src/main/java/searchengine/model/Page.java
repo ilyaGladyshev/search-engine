@@ -39,7 +39,6 @@ public class Page {
     public Page(SiteModel site, String path, CommonConfiguration common) throws IOException {
         this.site = site;
         this.path = path.substring(this.site.getUrl().length());
-        System.out.print(this.site.getUrl() + " | "+ this.path);
         Connection connection = common.getConnection(this);
         Connection.Response response = connection.execute();
         this.code = response.statusCode();
