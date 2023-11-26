@@ -44,7 +44,7 @@ public class CommonConfiguration {
 
     private int snippetWords;
 
-    private List<ParseTask> listParseTasks = new ArrayList<ParseTask>();
+    private List<ParseTask> listParseTasks = new ArrayList<>();
 
     private Boolean isInterrupt = false;
 

@@ -20,7 +20,6 @@ import java.util.Random;
 @RequiredArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
 
-    private final Random random = new Random();
     private final CommonConfiguration common;
 
     private String formatErrorData(String errorData){

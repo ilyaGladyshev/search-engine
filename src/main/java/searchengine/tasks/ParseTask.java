@@ -22,7 +22,7 @@ public class ParseTask extends RecursiveTask<TreeMap<String, Page>> {
 
     private List<ParseTask> taskList = new ArrayList<>();
 
-    private TreeMap<String, Page> links = new TreeMap<String, Page>();
+    private TreeMap<String, Page> links = new TreeMap<>();
 
     private CommonConfiguration common;
 
