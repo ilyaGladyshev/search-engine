@@ -13,8 +13,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.TreeMap;
-import java.util.concurrent.ForkJoinPool;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +27,6 @@ public class IndexingServiceTask extends Thread {
             SiteModelComparator siteModelComparator = new SiteModelComparator();
             Collections.sort(oldSites, siteModelComparator);
             List<Site> sitesList = common.getSites();
-            System.out.println(oldSites.size());
             updateSites(oldSites, sitesList, siteModelComparator);
         } catch (Exception ex){
             ex.printStackTrace();

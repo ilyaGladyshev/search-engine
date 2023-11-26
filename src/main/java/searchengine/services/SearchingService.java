@@ -1,7 +1,7 @@
 package searchengine.services;
 
-import searchengine.dto.searching.SearchingResponce;
+import searchengine.dto.searching.SearchingResponse;
 
 public interface SearchingService {
-    SearchingResponce searching(String url, int required, int offset, String site);
+    SearchingResponse searching(String url, int required, int offset, String site);
 }

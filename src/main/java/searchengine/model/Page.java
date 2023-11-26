@@ -6,8 +6,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.jsoup.Connection;
 import searchengine.config.CommonConfiguration;
-import searchengine.tasks.Lemmatization;
-
 import java.io.IOException;
 
 @Entity

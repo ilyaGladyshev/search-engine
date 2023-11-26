@@ -4,7 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import searchengine.config.CommonConfiguration;
-import searchengine.dto.common.CommonResponce;
+import searchengine.dto.common.CommonResponse;
 import searchengine.config.Site;
 import searchengine.model.Page;
 import searchengine.model.SiteModel;
@@ -44,10 +44,9 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     @Transactional
     private Page getPage(SiteModel site, String url) throws IOException {
         String path = url.substring(site.getUrl().length());
-        System.out.println(path);
-        List<Page> listFinded = common.getPageRepository().findPage(path);
-        if (listFinded.size() != 0){
-            Page oldPage = listFinded.get(0);
+        List<Page> listFounded = common.getPageRepository().findPage(path);
+        if (listFounded.size() != 0){
+            Page oldPage = listFounded.get(0);
             common.getPageRepository().delete(oldPage);
         }
         Page page = new Page(site, url, common);
@@ -67,11 +66,11 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     }
 
     @Override
-    public CommonResponce add(String url) {
+    public CommonResponse add(String url) {
         url = decodeUrl(url);
-        CommonResponce responce = new CommonResponce();
+        CommonResponse response = new CommonResponse();
         String siteUrl = checkPage(url);
-        System.out.println(siteUrl);
+        System.out.println("Добавление страницы "+url+" в очередь на индексацию");
         if (!(siteUrl.equals(""))) {
             try {
                 SiteModel siteModel = getSiteModel(siteUrl);
@@ -79,16 +78,16 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
                 Lemmatization lemmatization = new Lemmatization(page, common);
                 lemmatization.run();
                 common.saveLemmas(lemmatization.getResult(), page);
-                responce.setResult(true);
+                response.setResult(true);
             } catch (Exception ex) {
                 ex.printStackTrace();
-                responce.setResult(false);
-                responce.setError("Не удалось проиндексировать страницу");
+                response.setResult(false);
+                response.setError("Не удалось проиндексировать страницу");
             }
         } else{
-            responce.setResult(false);
-            responce.setError("Данная страница находится за пределами сайтов, указанных в конфигурационном файле");
+            response.setResult(false);
+            response.setError("Данная страница находится за пределами сайтов, указанных в конфигурационном файле");
         }
-        return responce;
+        return response;
     }
 }

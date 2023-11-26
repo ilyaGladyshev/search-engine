@@ -3,7 +3,7 @@ package searchengine.dto.common;
 import lombok.*;
 
 @Data
-public class CommonResponce {
+public class CommonResponse {
     private boolean result;
     private String error;
 }

@@ -67,6 +67,7 @@ public class ParseTask extends RecursiveTask<TreeMap<String, Page>> {
     @Override
     protected TreeMap<String, Page> compute() {
         try {
+            System.out.println("Парсинг страницы "+page.getPath());
             pause(500);
             Connection connection = common.getConnection(page);
             Document doc = connection.get();
@@ -76,7 +77,7 @@ public class ParseTask extends RecursiveTask<TreeMap<String, Page>> {
                     if (isCorrectAttr(attr.getValue())) {
                         String ref = formatReference(attr.getValue());
                         List<Page> foundedPages = findPage(ref.substring(page.getSite().getUrl().length()));
-                        if (isCorrectLink(ref) && (foundedPages.size() == 0) && (!(common.getIsInterrapt()))) {
+                        if (isCorrectLink(ref) && (foundedPages.size() == 0) && (!(common.getIsInterrupt()))) {
                             Page newPage = new Page(page.getSite(), ref, common);
                             renewDateInDB(newPage);
                             forkTasks(ref, newPage);
@@ -89,7 +90,7 @@ public class ParseTask extends RecursiveTask<TreeMap<String, Page>> {
             common.getSiteRepository().save(page.getSite());
             ex.printStackTrace();
         }
-        if (!(common.getIsInterrapt())) {
+        if (!(common.getIsInterrupt())) {
             joinTasks(taskList);
         }
         return links;

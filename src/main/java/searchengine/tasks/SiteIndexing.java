@@ -1,10 +1,7 @@
 package searchengine.tasks;
 
-import lombok.RequiredArgsConstructor;
 import searchengine.config.CommonConfiguration;
 import searchengine.model.Page;
-
-import java.io.IOException;
 import java.util.TreeMap;
 import java.util.concurrent.ForkJoinPool;
 
@@ -20,6 +17,7 @@ public class SiteIndexing extends Thread{
     @Override
     public void run() {
         super.run();
+        System.out.println("Старт процесса индексации для сайта "+page.getSite().getUrl());
         TreeMap<String,Page> links = new TreeMap<>();
         ParseTask parseTask = new ParseTask(page, common);
         common.getListParseTasks().add(parseTask);

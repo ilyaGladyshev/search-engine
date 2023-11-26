@@ -38,11 +38,7 @@ public class CommonConfiguration {
 
     private  String user_agent;
 
-    private String reffer;
-
-    private String proxy_ip;
-
-    private int proxy_port;
+    private String referrer;
 
     private int lemmaFrequency;
 
@@ -50,15 +46,14 @@ public class CommonConfiguration {
 
     private List<ParseTask> listParseTasks = new ArrayList<ParseTask>();
 
-    private Boolean isInterrapt = false;
+    private Boolean isInterrupt = false;
 
     public Connection getConnection(Page page){
         return Jsoup.connect(page.getSite().getUrl()+page.getPath())
-                //.proxy(this.proxy_ip, this.proxy_port)
                 .ignoreHttpErrors(true)
                 .userAgent(user_agent)
                 .followRedirects(false)
-                .referrer(reffer)
+                .referrer(referrer)
                 .ignoreContentType(true).timeout(15000).followRedirects(false);
     }
 
@@ -108,8 +103,7 @@ public class CommonConfiguration {
     }
 
     private Boolean checkWord(String inf){
-        Boolean result = false;
-        result = (!((inf.equals("СОЮЗ")) || (inf.equals("МЕЖД") ) || (inf.equals("ЧАСТ"))
+        Boolean result = (!((inf.equals("СОЮЗ")) || (inf.equals("МЕЖД") ) || (inf.equals("ЧАСТ"))
                 || (inf.equals("ПРЕДЛ")) || (inf.equals("МС")) )) ? true: false;
         return result;
     }

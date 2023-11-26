@@ -4,7 +4,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class SearchingResponce {
+public class SearchingResponse {
     private boolean result;
     private int count;
     private List<SearchingData> data;

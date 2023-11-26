@@ -23,6 +23,9 @@ public class StatisticsServiceImpl implements StatisticsService {
     private final Random random = new Random();
     private final CommonConfiguration common;
 
+    private String formatErrorData(String errorData){
+        return (errorData.equals("Null")) ? "" : errorData;
+    }
     @Override
     public StatisticsResponse getStatistics() {
         String[] statuses = { "INDEXED", "FAILED", "INDEXING" };
@@ -47,7 +50,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             int lemmas = common.getLemmaRepository().getLemmaCount(site.getUrl());
             item.setPages(pages);
             item.setLemmas(lemmas);
-            item.setError(common.getSiteRepository().getLastErrorByUrl(site.getUrl()));
+            item.setError(formatErrorData(common.getSiteRepository().getLastErrorByUrl(site.getUrl())));
             item.setStatus(common.getSiteRepository().getStatusByUrl(site.getUrl()));
             if (common.getSiteRepository().getStatusTimeByUrl(site.getUrl())!=null) {
                 ZonedDateTime zdt = ZonedDateTime.of(common.getSiteRepository().getStatusTimeByUrl(site.getUrl()), ZoneId.systemDefault());

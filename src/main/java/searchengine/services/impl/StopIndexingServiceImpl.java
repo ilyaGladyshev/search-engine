@@ -3,7 +3,7 @@ package searchengine.services.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import searchengine.config.CommonConfiguration;
-import searchengine.dto.common.CommonResponce;
+import searchengine.dto.common.CommonResponse;
 import searchengine.model.SiteModel;
 import searchengine.services.StopIndexingService;
 
@@ -13,10 +13,11 @@ public class StopIndexingServiceImpl implements StopIndexingService {
 
     private final CommonConfiguration common;
     @Override
-    public CommonResponce stopIndexing() {
-        CommonResponce responce = new CommonResponce();
+    public CommonResponse stopIndexing() {
+        CommonResponse response = new CommonResponse();
         try {
-            common.setIsInterrapt(true);
+            System.out.println("Остановка индексации");
+            common.setIsInterrupt(true);
             common.getListParseTasks().forEach(parseTask -> {
                 parseTask.cancel(true);
                 SiteModel siteModel = parseTask.getPage().getSite();
@@ -24,13 +25,13 @@ public class StopIndexingServiceImpl implements StopIndexingService {
                 common.getSiteRepository().save(siteModel);
             });
             common.getListParseTasks().clear();
-            responce.setResult(true);
+            response.setResult(true);
         } catch (Exception ex){
             ex.printStackTrace();
-            responce.setError("Ошибка остановки индексации");
-            responce.setResult(false);
+            response.setError("Ошибка остановки индексации");
+            response.setResult(false);
         }
 
-        return responce;
+        return response;
     }
 }

@@ -1,7 +1,7 @@
 package searchengine.services;
 
-import searchengine.dto.common.CommonResponce;
+import searchengine.dto.common.CommonResponse;
 
 public interface StopIndexingService {
-    CommonResponce stopIndexing();
+    CommonResponse stopIndexing();
 }

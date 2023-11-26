@@ -6,10 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 import searchengine.config.CommonConfiguration;
 import searchengine.config.Site;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Table(name="site")
@@ -38,16 +35,19 @@ public class SiteModel {
     private String name;
 
     public void renew(){
+        this.status = SiteStatus.INDEXING;
         this.statusTime = LocalDateTime.now();
     }
 
     public void renewError(String errorText){
         this.statusTime = LocalDateTime.now();
+        this.status = SiteStatus.FAILED;
         this.lastError = errorText;
     }
 
     public void renewCancel(){
         this.statusTime = LocalDateTime.now();
+        this.status = SiteStatus.FAILED;
         this.lastError = "Индексация отменена пользователем";
     }
     public SiteModel(){

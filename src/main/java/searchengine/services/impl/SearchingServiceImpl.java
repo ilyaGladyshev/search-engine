@@ -5,11 +5,9 @@ import org.springframework.stereotype.Service;
 import searchengine.config.CommonConfiguration;
 import searchengine.dto.searching.SearchingData;
 import searchengine.dto.searching.SearchingDataComparator;
-import searchengine.dto.searching.SearchingResponce;
+import searchengine.dto.searching.SearchingResponse;
 import searchengine.model.*;
 import searchengine.services.SearchingService;
-
-import java.io.IOException;
 import java.util.*;
 
 @Service
@@ -19,13 +17,14 @@ public class SearchingServiceImpl implements SearchingService {
     private final CommonConfiguration common;
     private List<PageTemp> pages = new ArrayList<>();
     @Override
-    public SearchingResponce searching(String query, int offset,
+    public SearchingResponse searching(String query, int offset,
                                        int limit, String site) {
-        SearchingResponce searchingResponce = new SearchingResponce();
+        SearchingResponse searchingResponce = new SearchingResponse();
+        System.out.println("Начат поиск по ключевым словам");
         try {
             HashMap<String, Integer> listLemmas = common.getListLemmas(query);
             List<Lemma> listLemmaModel = getListLemmaModel(listLemmas, site);
-            searchingResponce = getSearchResponce(listLemmaModel);
+            searchingResponce = getSearchResponse(listLemmaModel);
         } catch (Exception e) {
             searchingResponce.setResult(false);
             searchingResponce.setError("Задан пустой поисковый запрос");
@@ -52,10 +51,10 @@ public class SearchingServiceImpl implements SearchingService {
        return resultList;
     }
 
-    private SearchingResponce getSearchResponce(List<Lemma> lemmaList){
-        SearchingResponce searchingResponce = new SearchingResponce();
-        searchingResponce.setResult(true);
-        searchingResponce.setData(new ArrayList<>());
+    private SearchingResponse getSearchResponse(List<Lemma> lemmaList){
+        SearchingResponse searchingResponse = new SearchingResponse();
+        searchingResponse.setResult(true);
+        searchingResponse.setData(new ArrayList<>());
         LemmaComparator comparator = new LemmaComparator();
         Collections.sort(lemmaList, comparator);
         int count = 0;
@@ -69,16 +68,16 @@ public class SearchingServiceImpl implements SearchingService {
                 System.out.println(pageTemp.getRelevance()+" "+maxRelevance+" "+(double)pageTemp.getRelevance()/maxRelevance);
                 SearchingData data = new SearchingData(i, common,
                         snippet.getText(), (double)pageTemp.getRelevance()/maxRelevance);
-                searchingResponce.getData().add(data);
+                searchingResponse.getData().add(data);
                 words = Arrays.copyOfRange(words, snippet.getIndex(), words.length);
                 count++;
             };
         };
-        searchingResponce.setCount(count);
+        searchingResponse.setCount(count);
         SearchingDataComparator dataComparator = new SearchingDataComparator();
-        Collections.sort(searchingResponce.getData(), dataComparator);
+        Collections.sort(searchingResponse.getData(), dataComparator);
         pages.clear();
-        return searchingResponce;
+        return searchingResponse;
     }
 
     private SnippetClass getSnippet(String[] words, String text){
@@ -113,13 +112,11 @@ public class SearchingServiceImpl implements SearchingService {
                     page.getListLemma().add(lemma);
                     page.getListIndex().add(index);
                     page.setRelevance(page.getRelevance() + index.getRank());
-                    System.out.println("renew "+page.getPage().getPath()+" "+index.getLemma().getLemma()+page.getRelevance());
                 } else {
                     temp.getListLemma().add(lemma);
                     temp.getListIndex().add(index);
                     temp.setRelevance(index.getRank());
                     pages.add(temp);
-                    System.out.println("add "+temp.getPage().getPath()+" "+index.getLemma().getLemma()+temp.getRelevance());
                 }
             }
         });

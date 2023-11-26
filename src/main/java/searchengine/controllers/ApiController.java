@@ -2,9 +2,8 @@ package searchengine.controllers;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.annotation.RequestScope;
-import searchengine.dto.common.CommonResponce;
-import searchengine.dto.searching.SearchingResponce;
+import searchengine.dto.common.CommonResponse;
+import searchengine.dto.searching.SearchingResponse;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.services.*;
 
@@ -33,21 +32,21 @@ public class ApiController {
     }
 
     @GetMapping("/startIndexing")
-    public ResponseEntity<CommonResponce> startIndexing(){
+    public ResponseEntity<CommonResponse> startIndexing(){
         return ResponseEntity.ok(startIndexingService.indexing());
     }
     @GetMapping("/stopIndexing")
-    public ResponseEntity<CommonResponce> stopIndexing(){
+    public ResponseEntity<CommonResponse> stopIndexing(){
         return ResponseEntity.ok(stopIndexingService.stopIndexing());
     }
 
     @PostMapping("/indexPage")
-    public ResponseEntity<CommonResponce> addIndexingPage(@RequestParam String url){
+    public ResponseEntity<CommonResponse> addIndexingPage(@RequestParam String url){
         return ResponseEntity.ok(addIndexingPageService.add(url));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<SearchingResponce> searching(@RequestParam String query, @RequestParam(required = false) int offset,
+    public ResponseEntity<SearchingResponse> searching(@RequestParam String query, @RequestParam(required = false) int offset,
                                                        @RequestParam(required = false) int limit, @RequestParam(required = false) String site) {
         return ResponseEntity.ok(searchingService.searching(query, limit, offset, site));
     }
