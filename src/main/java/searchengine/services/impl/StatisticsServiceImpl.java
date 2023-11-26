@@ -24,7 +24,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     private final CommonConfiguration common;
 
     private String formatErrorData(String errorData){
-        return (errorData.equals("Null")) ? "" : errorData;
+        return (errorData == null) ? "" : errorData;
     }
     @Override
     public StatisticsResponse getStatistics() {
