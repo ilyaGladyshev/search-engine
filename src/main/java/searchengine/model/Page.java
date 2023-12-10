@@ -4,12 +4,14 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.jsoup.Connection;
 import searchengine.config.CommonConfiguration;
 import java.io.IOException;
 
 @Entity
-@Table//(indexes = @Index(name = "pathIndex", columnList = "path"))
+@Table
 @Setter
 @Getter
 @ToString
@@ -18,8 +20,9 @@ public class Page {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REFRESH)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "site_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private SiteModel site;
 
     @Column(nullable = false, columnDefinition = "TEXT")
