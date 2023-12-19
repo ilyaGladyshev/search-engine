@@ -1,6 +1,6 @@
 package searchengine.dto.common;
 
-import lombok.Data;
+import lombok.*;
 
 @Data
 public class CommonResponse {

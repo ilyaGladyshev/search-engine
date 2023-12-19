@@ -1,1 +1,0 @@
-create index pathIndex on page (path(150))

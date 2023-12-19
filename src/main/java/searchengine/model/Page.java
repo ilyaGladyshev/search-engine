@@ -4,13 +4,12 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
+import org.jsoup.Connection;
+import searchengine.config.CommonConfiguration;
 import java.io.IOException;
 
 @Entity
-@Table
+@Table//(indexes = @Index(name = "pathIndex", columnList = "path"))
 @Setter
 @Getter
 @ToString
@@ -19,9 +18,8 @@ public class Page {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REFRESH)
     @JoinColumn(name = "site_id")
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private SiteModel site;
 
     @Column(nullable = false, columnDefinition = "TEXT")
@@ -30,14 +28,19 @@ public class Page {
     @Column(nullable = false)
     private int code;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "MEDIUMTEXT")
     private String content;
 
-    public Page() {
+    public Page(){
     }
 
-    public Page(SiteModel site, String path) throws IOException {
+    public Page(SiteModel site, String path, CommonConfiguration common) throws IOException {
         this.site = site;
         this.path = path.substring(this.site.getUrl().length());
+        Connection connection = common.getConnection(this);
+        Connection.Response response = connection.execute();
+        this.code = response.statusCode();
+        System.out.println(this.code);
+        this.content = response.body();
     }
 }

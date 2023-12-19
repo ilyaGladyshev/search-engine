@@ -16,7 +16,6 @@ public class ApiController {
     private final StopIndexingService stopIndexingService;
     private final AddIndexingPageService addIndexingPageService;
     private final SearchingService searchingService;
-
     public ApiController(StatisticsService statisticsService, StartIndexingService startIndexingService,
                          StopIndexingService stopIndexingService, AddIndexingPageService addIndexingPageService,
                          SearchingService searchingService) {
@@ -33,17 +32,16 @@ public class ApiController {
     }
 
     @GetMapping("/startIndexing")
-    public ResponseEntity<CommonResponse> startIndexing() {
+    public ResponseEntity<CommonResponse> startIndexing(){
         return ResponseEntity.ok(startIndexingService.indexing());
     }
-
     @GetMapping("/stopIndexing")
-    public ResponseEntity<CommonResponse> stopIndexing() {
+    public ResponseEntity<CommonResponse> stopIndexing(){
         return ResponseEntity.ok(stopIndexingService.stopIndexing());
     }
 
     @PostMapping("/indexPage")
-    public ResponseEntity<CommonResponse> addIndexingPage(@RequestParam String url) {
+    public ResponseEntity<CommonResponse> addIndexingPage(@RequestParam String url){
         return ResponseEntity.ok(addIndexingPageService.add(url));
     }
 
