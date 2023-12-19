@@ -14,7 +14,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -22,46 +21,18 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     private final CommonConfiguration common;
 
-    private String formatErrorData(String errorData){
+    private String formatErrorData(String errorData) {
         return (errorData == null) ? "" : errorData;
     }
+
     @Override
     public StatisticsResponse getStatistics() {
-        String[] statuses = { "INDEXED", "FAILED", "INDEXING" };
-        String[] errors = {
-                "Ошибка индексации: главная страница сайта не доступна",
-                "Ошибка индексации: сайт не доступен",
-                ""
-        };
-
         TotalStatistics total = new TotalStatistics();
         total.setSites(common.getSites().size());
         total.setIndexing(true);
-
         List<DetailedStatisticsItem> detailed = new ArrayList<>();
         List<Site> sitesList = common.getSites();
-        for(int i = 0; i < sitesList.size(); i++) {
-            Site site = sitesList.get(i);
-            DetailedStatisticsItem item = new DetailedStatisticsItem();
-            item.setName(site.getName());
-            item.setUrl(site.getUrl());
-            int pages = common.getPageRepository().getPagesCount(site.getUrl());
-            int lemmas = common.getLemmaRepository().getLemmaCount(site.getUrl());
-            item.setPages(pages);
-            item.setLemmas(lemmas);
-            item.setError(formatErrorData(common.getSiteRepository().getLastErrorByUrl(site.getUrl())));
-            item.setStatus(common.getSiteRepository().getStatusByUrl(site.getUrl()));
-            if (common.getSiteRepository().getStatusTimeByUrl(site.getUrl())!=null) {
-                ZonedDateTime zdt = ZonedDateTime.of(common.getSiteRepository().getStatusTimeByUrl(site.getUrl()), ZoneId.systemDefault());
-                item.setStatusTime(zdt.toInstant().toEpochMilli());
-            } else {
-                item.setStatusTime(0);
-            }
-            total.setPages(total.getPages() + pages);
-            total.setLemmas(total.getLemmas() + lemmas);
-            detailed.add(item);
-        }
-
+        executeSitesList(sitesList, total, detailed);
         StatisticsResponse response = new StatisticsResponse();
         StatisticsData data = new StatisticsData();
         data.setTotal(total);
@@ -69,5 +40,32 @@ public class StatisticsServiceImpl implements StatisticsService {
         response.setStatistics(data);
         response.setResult(true);
         return response;
+    }
+
+    private void executeSitesList(List<Site> sitesList, TotalStatistics total, List<DetailedStatisticsItem> detailed){
+        for (Site site : sitesList) {
+            int pages = common.getPageRepository().getPagesCount(site.getUrl());
+            int lemmas = common.getLemmaRepository().getLemmaCount(site.getUrl());
+            DetailedStatisticsItem item = getStatisticsItem(site, pages, lemmas);
+            total.setPages(total.getPages() + pages);
+            total.setLemmas(total.getLemmas() + lemmas);
+            detailed.add(item);
+        }
+    }
+
+    private DetailedStatisticsItem getStatisticsItem(Site site, int pages, int lemmas){
+        DetailedStatisticsItem item = new DetailedStatisticsItem();
+        item.setName(site.getName());
+        item.setUrl(site.getUrl());
+        item.setPages(pages);
+        item.setLemmas(lemmas);
+        item.setError(formatErrorData(common.getSiteRepository().getLastErrorByUrl(site.getUrl())));
+        item.setStatus(common.getSiteRepository().getStatusByUrl(site.getUrl()));
+        if (common.getSiteRepository().getStatusTimeByUrl(site.getUrl()) != null) {
+            ZonedDateTime zdt = ZonedDateTime.of(common.getSiteRepository().getStatusTimeByUrl(site.getUrl()), ZoneId.systemDefault());
+            item.setStatusTime(zdt.toInstant().toEpochMilli());
+        } else {
+            item.setStatusTime(0);
+        } return item;
     }
 }

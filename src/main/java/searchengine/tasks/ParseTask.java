@@ -2,6 +2,7 @@ package searchengine.tasks;
 
 import jakarta.transaction.Transactional;
 import lombok.Getter;
+import org.apache.logging.log4j.Level;
 import org.jsoup.Connection;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
@@ -9,14 +10,29 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import searchengine.config.CommonConfiguration;
 import searchengine.model.Page;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.RecursiveAction;
 
 @Getter
-public class ParseTask extends RecursiveTask<TreeMap<String, Page>> {
+public class ParseTask extends RecursiveAction {
+
+    private final int pauseDuration = 500;
+
+    private final String cssQuery = "a";
+
+    private final String hashText = "#";
+
+    private final String questionText = "?";
+
+    private final char slashSymbol = '/';
+
+    private final char charServerError = '5';
+
+    private final char charClientError = '4';
 
     private Page page;
 
@@ -31,106 +47,105 @@ public class ParseTask extends RecursiveTask<TreeMap<String, Page>> {
         this.common = common;
     }
 
-    private String formatReference(String ref){
-        ref = (ref.contains(page.getSite().getUrl())==false) ? page.getSite().getUrl()+ref : ref;
+    private String formatReference(String ref) {
+        ref = (!ref.contains(page.getSite().getUrl())) ? page.getSite().getUrl() + ref : ref;
         return ref;
     }
-    private Boolean isCorrectAttr(String attr){
-        if(attr.contains(page.getSite().getUrl())){
+
+    private Boolean isCorrectAttr(String attr) {
+        if (attr.contains(page.getSite().getUrl())) {
             return true;
-        } else if ((attr.indexOf('/')==0)
-                &&(attr.length()>1)){
-            return true;
-        } else {
-            return false;
-        }
-    }
-    private Boolean isCorrectLink(String link){
-        return ((!(link.contains("#")))&&(!(link.contains("?")))) ? true : false;
+        } else return (attr.indexOf(slashSymbol) == 0)
+                && (attr.length() > 1);
     }
 
-    //@Transactional
-    private List<Page> findPage(String url){
+    private Boolean isCorrectLink(String link) {
+        return (!(link.contains(hashText))) && (!(link.contains(questionText)));
+    }
+
+    @Transactional
+    private List<Page> findPage(String url) {
         return common.getPageRepository().findPage(url);
     }
 
-    private void pause(int duration){
+    private void pause(int duration) {
         try {
             Thread.sleep(duration);
         } catch (InterruptedException e) {
             page.getSite().renewError("Ошибка при установки паузы");
             common.getSiteRepository().save(page.getSite());
-            e.printStackTrace();
-        }
+            common.getLogger().error("Ошибка при установки паузы "+e.getMessage());        }
     }
 
     @Override
-    protected TreeMap<String, Page> compute() {
+    protected void compute() {
         try {
-            System.out.println("Парсинг страницы "+page.getPath());
-            pause(500);
+            common.getLogger().log(Level.INFO, "Парсинг страницы " + page.getSite().getUrl() + page.getPath());
+            pause(pauseDuration);
             Connection connection = common.getConnection(page);
             Document doc = connection.get();
-            Elements elements = doc.select("a");
-            for (Element element : elements) {
-                for (Attribute attr : element.attributes()) {
-                    if (isCorrectAttr(attr.getValue())) {
-                        String ref = formatReference(attr.getValue());
-                        List<Page> foundedPages = findPage(ref.substring(page.getSite().getUrl().length()));
-                        if (isCorrectLink(ref) && (foundedPages.size() == 0) && (!(common.getIsInterrupt()))) {
-                            Page newPage = new Page(page.getSite(), ref, common);
-                            renewDateInDB(newPage);
-                            forkTasks(ref, newPage);
-                        }
-                    }
-                };
-            };
+            Elements elements = doc.select(cssQuery);
+            parsePage(elements);
         } catch (IOException ex) {
             page.getSite().renewError("Ошибка при открытии страницы");
             common.getSiteRepository().save(page.getSite());
-            ex.printStackTrace();
+            common.getLogger().log(Level.ERROR,"Ошибка при открытии страницы " + ex.getMessage());
         }
         if (!(common.getIsInterrupt())) {
             joinTasks(taskList);
         }
-        return links;
     }
 
-    private void forkTasks(String ref, Page newPage){
-        ParseTask task = new ParseTask(newPage, common);
-        task.fork();
-        taskList.add(task);
-        links.put(ref, newPage);
+    private void parsePage(Elements elements) throws IOException {
+        for (Element element : elements) {
+            for (Attribute attr : element.attributes()) {
+                if (isCorrectAttr(attr.getValue())) {
+                    String ref = formatReference(attr.getValue());
+                    List<Page> foundedPages = findPage(ref.substring(page.getSite().getUrl().length()));
+                    if (isCorrectLink(ref) && (foundedPages.isEmpty()) && (!(common.getIsInterrupt()))) {
+                        Page newPage = new Page(page.getSite(), ref);
+                        Connection connection = common.getConnection(page);
+                        Connection.Response response = connection.execute();
+                        newPage.setCode(response.statusCode());
+                        newPage.setContent(response.body());
+                        renewDateInDB(newPage);
+                        forkTasks(ref, newPage);
+                    }
+                }
+            }
+        }
     }
 
-    private void joinTasks(List<ParseTask> taskList){
+    private void forkTasks(String ref, Page newPage) {
+        if (!(common.getIsInterrupt())) {
+            ParseTask task = new ParseTask(newPage, common);
+            task.fork();
+            taskList.add(task);
+            links.put(ref, newPage);
+        }
+    }
+
+    private void joinTasks(List<ParseTask> taskList) {
         for (ParseTask task : taskList) {
             try {
-                TreeMap<String, Page> temp = task.join();
-                temp.values().forEach(t -> {
-                    List<Page> foundedPages = common.getPageRepository().findPage((t.getPath()));
-                    if (foundedPages.size() == 0) {
-                        links.put(t.getPath(), t);
-                    }
-                });
+                task.join();
             } catch (Exception ex) {
                 page.getSite().renewError("Ошибка при вызове метода join");
                 common.getSiteRepository().save(page.getSite());
                 Thread.currentThread().interrupt();
-                ex.printStackTrace();
-            };
+                common.getLogger().error("Ошибка при вызове метода join "+ex.getMessage());
+            }
         }
     }
 
     @Transactional
-    private void renewDateInDB(Page page) throws IOException {
+    private void renewDateInDB(Page page) {
         common.getPageRepository().save(page);
-        page.getSite().renew();
-        common.getSiteRepository().save(page.getSite());
-        if (!((Integer.toString(page.getCode()).substring(0,1)=="4") || (Integer.toString(page.getCode()).substring(0,1)=="5"))){
+        if (!((Integer.toString(page.getCode()).charAt(0) == charClientError) || (Integer.toString(page.getCode()).charAt(0) == charServerError))) {
             Lemmatization lemmatization = new Lemmatization(page, common);
             lemmatization.run();
-            common.saveLemmas(lemmatization.getResult(),page);
+            System.out.println("Lemmatization size " + lemmatization.result.size());
+            lemmatization.saveLemmas();
         }
     }
 

@@ -1,10 +1,14 @@
-package searchengine.model;
+package searchengine.services.temp;
 
 import lombok.Getter;
 import lombok.Setter;
+import searchengine.model.Index;
+import searchengine.model.Lemma;
+import searchengine.model.Page;
 
 import java.util.ArrayList;
 import java.util.List;
+
 @Setter
 @Getter
 public class PageTemp {
