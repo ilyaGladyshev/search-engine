@@ -28,7 +28,7 @@ public class SiteModel {
     @Column(nullable = false, name = "status_time", columnDefinition = "DATETIME")
     private LocalDateTime statusTime;
 
-    @Column(nullable = true, name = "last_error")
+    @Column(name = "last_error")
     private String lastError;
 
     @Column(nullable = false, columnDefinition = "VARCHAR(255)")

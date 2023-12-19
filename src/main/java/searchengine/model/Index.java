@@ -25,7 +25,7 @@ public class Index {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Lemma lemma;
 
-    @Column(nullable = true, name = "`rank`")
+    @Column(name = "`rank`")
     private long rank;
 
     public Index(Page page, Lemma lemma, int rank) {
