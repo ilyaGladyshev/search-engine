@@ -13,13 +13,12 @@ public class SearchingData {
     private String snippet;
     private double relevance;
 
-    public SearchingData(Index index, CommonConfiguration common,
-                        String snippet, double relevance) {
+    public SearchingData(Index index,
+                         String snippet, double relevance) {
         this.site = index.getPage().getSite().getUrl();
         this.siteName = index.getPage().getSite().getName();
         this.uri = index.getPage().getPath();
         this.snippet = snippet;
-        this.title = common.getTitle(index.getPage().getContent());
         this.relevance = relevance;
     }
 }

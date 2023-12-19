@@ -1,4 +1,4 @@
-package searchengine.model;
+package searchengine.services.temp;
 
 import java.util.Comparator;
 

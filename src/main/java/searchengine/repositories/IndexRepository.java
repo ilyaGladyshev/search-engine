@@ -11,8 +11,4 @@ public interface IndexRepository extends CrudRepository<Index, Integer> {
     @Query(value = "SELECT * from `index` i where i.lemma_id = :lemma", nativeQuery = true)
     List<Index> findIndex(int lemma);
 
-    //@Query(value = "SELECT i.rank from index i where i.lemma = :lemma", nativeQuery = true)
-    //int getRank(String lemma);
-
-
 }

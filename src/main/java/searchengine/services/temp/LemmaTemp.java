@@ -1,4 +1,4 @@
-package searchengine.model;
+package searchengine.services.temp;
 
 import lombok.Getter;
 import lombok.Setter;

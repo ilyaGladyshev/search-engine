@@ -3,6 +3,8 @@ package searchengine.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table
@@ -13,8 +15,9 @@ public class Lemma {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REFRESH)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, optional = false)
     @JoinColumn(name = "site_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private SiteModel site;
 
     @Column(nullable = false, columnDefinition = "VARCHAR(255)")
@@ -29,6 +32,6 @@ public class Lemma {
         this.frequency = 1;
     }
 
-    public Lemma(){
+    public Lemma() {
     }
 }

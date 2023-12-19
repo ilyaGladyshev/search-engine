@@ -1,6 +1,7 @@
 package searchengine.services.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.Level;
 import org.springframework.stereotype.Service;
 import searchengine.config.CommonConfiguration;
 import searchengine.dto.common.CommonResponse;
@@ -12,11 +13,12 @@ import searchengine.services.StopIndexingService;
 public class StopIndexingServiceImpl implements StopIndexingService {
 
     private final CommonConfiguration common;
+
     @Override
     public CommonResponse stopIndexing() {
         CommonResponse response = new CommonResponse();
         try {
-            System.out.println("Остановка индексации");
+            common.getLogger().log(Level.INFO, "Остановка индексации");
             common.setIsInterrupt(true);
             common.getListParseTasks().forEach(parseTask -> {
                 parseTask.cancel(true);
@@ -26,8 +28,8 @@ public class StopIndexingServiceImpl implements StopIndexingService {
             });
             common.getListParseTasks().clear();
             response.setResult(true);
-        } catch (Exception ex){
-            ex.printStackTrace();
+        } catch (Exception ex) {
+            common.getLogger().log(Level.ERROR,"Ошибка остановки индексации " + ex.getMessage());
             response.setError("Ошибка остановки индексации");
             response.setResult(false);
         }
