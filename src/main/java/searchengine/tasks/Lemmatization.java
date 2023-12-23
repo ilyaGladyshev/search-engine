@@ -3,11 +3,15 @@ package searchengine.tasks;
 import jakarta.transaction.Transactional;
 import lombok.Getter;
 import org.apache.logging.log4j.Level;
+import org.springframework.beans.factory.annotation.Autowired;
 import searchengine.config.CommonConfiguration;
 import searchengine.model.Index;
 import searchengine.model.Lemma;
 import searchengine.model.Page;
+import searchengine.repositories.IndexRepository;
+import searchengine.repositories.LemmaRepository;
 import searchengine.services.temp.CommonLemmatization;
+
 import java.util.*;
 
 @Getter
@@ -19,6 +23,12 @@ public class Lemmatization extends Thread {
 
     private CommonConfiguration common;
 
+    @Autowired
+    private IndexRepository indexRepository;
+
+    @Autowired
+    private LemmaRepository lemmaRepository;
+
     @Transactional
     public void saveLemmas() {
         String strLemma;
@@ -26,7 +36,7 @@ public class Lemmatization extends Thread {
         Iterator<String> iterator = result.keySet().iterator();
         while (iterator.hasNext()) {
             strLemma = iterator.next();
-            List<Lemma> listLemma = common.getLemmaRepository().findAllLemmas(strLemma);
+            List<Lemma> listLemma = lemmaRepository.findAllLemmas(strLemma);
             if (listLemma.isEmpty()) {
                 lemma = new Lemma(strLemma, page.getSite());
             } else {
@@ -34,8 +44,8 @@ public class Lemmatization extends Thread {
                 lemma.setFrequency(lemma.getFrequency() + 1);
             }
             Index index = new Index(page, lemma, result.get(strLemma));
-            common.getLemmaRepository().save(lemma);
-            common.getIndexRepository().save(index);
+            lemmaRepository.save(lemma);
+            indexRepository.save(index);
         }
     }
 

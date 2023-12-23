@@ -8,8 +8,11 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import searchengine.config.CommonConfiguration;
 import searchengine.model.Page;
+import searchengine.repositories.PageRepository;
+import searchengine.repositories.SiteRepository;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,6 +45,12 @@ public class ParseTask extends RecursiveAction {
 
     private CommonConfiguration common;
 
+    @Autowired
+    private SiteRepository siteRepository;
+
+    @Autowired
+    private PageRepository pageRepository;
+
     public ParseTask(Page page, CommonConfiguration common) {
         this.page = page;
         this.common = common;
@@ -65,7 +74,7 @@ public class ParseTask extends RecursiveAction {
 
     @Transactional
     private List<Page> findPage(String url) {
-        return common.getPageRepository().findPage(url);
+        return pageRepository.findPage(url);
     }
 
     private void pause(int duration) {
@@ -73,8 +82,9 @@ public class ParseTask extends RecursiveAction {
             Thread.sleep(duration);
         } catch (InterruptedException e) {
             page.getSite().renewError("Ошибка при установки паузы");
-            common.getSiteRepository().save(page.getSite());
-            common.getLogger().error("Ошибка при установки паузы "+e.getMessage());        }
+            siteRepository.save(page.getSite());
+            common.getLogger().error("Ошибка при установки паузы " + e.getMessage());
+        }
     }
 
     @Override
@@ -88,8 +98,8 @@ public class ParseTask extends RecursiveAction {
             parsePage(elements);
         } catch (IOException ex) {
             page.getSite().renewError("Ошибка при открытии страницы");
-            common.getSiteRepository().save(page.getSite());
-            common.getLogger().log(Level.ERROR,"Ошибка при открытии страницы " + ex.getMessage());
+            siteRepository.save(page.getSite());
+            common.getLogger().log(Level.ERROR, "Ошибка при открытии страницы " + ex.getMessage());
         }
         if (!(common.getIsInterrupt())) {
             joinTasks(taskList);
@@ -131,16 +141,16 @@ public class ParseTask extends RecursiveAction {
                 task.join();
             } catch (Exception ex) {
                 page.getSite().renewError("Ошибка при вызове метода join");
-                common.getSiteRepository().save(page.getSite());
+                siteRepository.save(page.getSite());
                 Thread.currentThread().interrupt();
-                common.getLogger().error("Ошибка при вызове метода join "+ex.getMessage());
+                common.getLogger().error("Ошибка при вызове метода join " + ex.getMessage());
             }
         }
     }
 
     @Transactional
     private void renewDateInDB(Page page) {
-        common.getPageRepository().save(page);
+        pageRepository.save(page);
         if (!((Integer.toString(page.getCode()).charAt(0) == charClientError) || (Integer.toString(page.getCode()).charAt(0) == charServerError))) {
             Lemmatization lemmatization = new Lemmatization(page, common);
             lemmatization.run();

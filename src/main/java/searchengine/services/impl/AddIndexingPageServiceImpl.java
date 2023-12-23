@@ -4,14 +4,18 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Level;
 import org.jsoup.Connection;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.CommonConfiguration;
 import searchengine.dto.common.CommonResponse;
 import searchengine.config.Site;
 import searchengine.model.Page;
 import searchengine.model.SiteModel;
+import searchengine.repositories.PageRepository;
+import searchengine.repositories.SiteRepository;
 import searchengine.services.AddIndexingPageService;
 import searchengine.tasks.Lemmatization;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -21,6 +25,12 @@ import java.util.List;
 public class AddIndexingPageServiceImpl implements AddIndexingPageService {
 
     private final CommonConfiguration common;
+
+    @Autowired
+    private PageRepository pageRepository;
+
+    @Autowired
+    private SiteRepository siteRepository;
 
     private String decodeUrl(String url) {
         return java.net.URLDecoder.decode(url.substring(url.indexOf('=') + 1), StandardCharsets.UTF_8);
@@ -39,17 +49,17 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     @Transactional
     private Page getPage(SiteModel site, String url) throws IOException {
         String path = url.substring(site.getUrl().length());
-        List<Page> listFounded = common.getPageRepository().findPage(path);
+        List<Page> listFounded = pageRepository.findPage(path);
         if (!listFounded.isEmpty()) {
             Page oldPage = listFounded.get(0);
-            common.getPageRepository().delete(oldPage);
+            pageRepository.delete(oldPage);
         }
         Page page = new Page(site, url);
         Connection connection = common.getConnection(page);
         Connection.Response response = connection.execute();
         page.setCode(response.statusCode());
         page.setContent(response.body());
-        common.getPageRepository().save(page);
+        pageRepository.save(page);
         return page;
     }
 
@@ -64,10 +74,10 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
 
     @Transactional
     private SiteModel getSiteModel(String url) {
-        List<SiteModel> listFounded = common.getSiteRepository().findSiteByUrl(url);
+        List<SiteModel> listFounded = siteRepository.findSiteByUrl(url);
         if (listFounded.isEmpty()) {
             SiteModel site = new SiteModel(formatUrl(url));
-            common.getSiteRepository().save(site);
+            siteRepository.save(site);
             return site;
         } else {
             return listFounded.get(0);

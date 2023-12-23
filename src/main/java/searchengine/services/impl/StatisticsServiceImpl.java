@@ -1,6 +1,7 @@
 package searchengine.services.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.config.CommonConfiguration;
@@ -8,6 +9,9 @@ import searchengine.dto.statistics.DetailedStatisticsItem;
 import searchengine.dto.statistics.StatisticsData;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.dto.statistics.TotalStatistics;
+import searchengine.repositories.LemmaRepository;
+import searchengine.repositories.PageRepository;
+import searchengine.repositories.SiteRepository;
 import searchengine.services.StatisticsService;
 
 import java.time.ZoneId;
@@ -20,6 +24,15 @@ import java.util.List;
 public class StatisticsServiceImpl implements StatisticsService {
 
     private final CommonConfiguration common;
+
+    @Autowired
+    private SiteRepository siteRepository;
+
+    @Autowired
+    private PageRepository pageRepository;
+
+    @Autowired
+    private LemmaRepository lemmaRepository;
 
     private String formatErrorData(String errorData) {
         return (errorData == null) ? "" : errorData;
@@ -42,10 +55,10 @@ public class StatisticsServiceImpl implements StatisticsService {
         return response;
     }
 
-    private void executeSitesList(List<Site> sitesList, TotalStatistics total, List<DetailedStatisticsItem> detailed){
+    private void executeSitesList(List<Site> sitesList, TotalStatistics total, List<DetailedStatisticsItem> detailed) {
         for (Site site : sitesList) {
-            int pages = common.getPageRepository().getPagesCount(site.getUrl());
-            int lemmas = common.getLemmaRepository().getLemmaCount(site.getUrl());
+            int pages = pageRepository.getPagesCount(site.getUrl());
+            int lemmas = lemmaRepository.getLemmaCount(site.getUrl());
             DetailedStatisticsItem item = getStatisticsItem(site, pages, lemmas);
             total.setPages(total.getPages() + pages);
             total.setLemmas(total.getLemmas() + lemmas);
@@ -53,19 +66,20 @@ public class StatisticsServiceImpl implements StatisticsService {
         }
     }
 
-    private DetailedStatisticsItem getStatisticsItem(Site site, int pages, int lemmas){
+    private DetailedStatisticsItem getStatisticsItem(Site site, int pages, int lemmas) {
         DetailedStatisticsItem item = new DetailedStatisticsItem();
         item.setName(site.getName());
         item.setUrl(site.getUrl());
         item.setPages(pages);
         item.setLemmas(lemmas);
-        item.setError(formatErrorData(common.getSiteRepository().getLastErrorByUrl(site.getUrl())));
-        item.setStatus(common.getSiteRepository().getStatusByUrl(site.getUrl()));
-        if (common.getSiteRepository().getStatusTimeByUrl(site.getUrl()) != null) {
-            ZonedDateTime zdt = ZonedDateTime.of(common.getSiteRepository().getStatusTimeByUrl(site.getUrl()), ZoneId.systemDefault());
+        item.setError(formatErrorData(siteRepository.getLastErrorByUrl(site.getUrl())));
+        item.setStatus(siteRepository.getStatusByUrl(site.getUrl()));
+        if (siteRepository.getStatusTimeByUrl(site.getUrl()) != null) {
+            ZonedDateTime zdt = ZonedDateTime.of(siteRepository.getStatusTimeByUrl(site.getUrl()), ZoneId.systemDefault());
             item.setStatusTime(zdt.toInstant().toEpochMilli());
         } else {
             item.setStatusTime(0);
-        } return item;
+        }
+        return item;
     }
 }

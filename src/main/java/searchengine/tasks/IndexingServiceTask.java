@@ -3,12 +3,14 @@ package searchengine.tasks;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Level;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.config.CommonConfiguration;
 import searchengine.model.Page;
 import searchengine.model.SiteModelComparator;
 import searchengine.model.SiteModel;
+import searchengine.repositories.SiteRepository;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,11 +22,13 @@ import java.util.List;
 public class IndexingServiceTask extends Thread {
 
     private final CommonConfiguration common;
+    @Autowired
+    private SiteRepository siteRepository;
 
     @Override
     public void run() {
         try {
-            Iterable<SiteModel> siteIterable = common.getSiteRepository().findAll();
+            Iterable<SiteModel> siteIterable = siteRepository.findAll();
             List<SiteModel> oldSites = new ArrayList<>();
             siteIterable.forEach(temp -> oldSites.add(temp));
             List<Site> sitesList = common.getSites();
@@ -43,12 +47,12 @@ public class IndexingServiceTask extends Thread {
             if (oldSites.size() > 0) {
                 try {
                     SiteModel oldSite = oldSites.get(Collections.binarySearch(oldSites, siteModel, siteModelComparator));
-                    common.getSiteRepository().delete(oldSite);
+                    siteRepository.delete(oldSite);
                 } catch (Exception ex) {
                     common.getLogger().log(Level.ERROR, ex.getMessage());
                 }
             }
-            common.getSiteRepository().save(siteModel);
+            siteRepository.save(siteModel);
             indexing(siteModel);
             siteModel.renew();
         });

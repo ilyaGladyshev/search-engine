@@ -19,6 +19,7 @@ import searchengine.repositories.LemmaRepository;
 import searchengine.repositories.PageRepository;
 import searchengine.repositories.SiteRepository;
 import searchengine.tasks.ParseTask;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,18 +53,6 @@ public class CommonConfiguration {
     public LuceneMorphology luceneMorphology() throws IOException {
         return new RussianLuceneMorphology();
     }
-
-    @Autowired
-    private SiteRepository siteRepository;
-
-    @Autowired
-    private PageRepository pageRepository;
-
-    @Autowired
-    private IndexRepository indexRepository;
-
-    @Autowired
-    private LemmaRepository lemmaRepository;
 
     public Connection getConnection(Page page) {
         return Jsoup.connect(page.getSite().getUrl() + page.getPath())

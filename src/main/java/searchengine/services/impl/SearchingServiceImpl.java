@@ -2,12 +2,16 @@ package searchengine.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Level;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.CommonConfiguration;
 import searchengine.dto.searching.SearchingData;
 import searchengine.dto.searching.SearchingDataComparator;
 import searchengine.dto.searching.SearchingResponse;
 import searchengine.model.*;
+import searchengine.repositories.IndexRepository;
+import searchengine.repositories.LemmaRepository;
+import searchengine.repositories.SiteRepository;
 import searchengine.services.SearchingService;
 import searchengine.services.temp.CommonLemmatization;
 import searchengine.services.temp.PageTemp;
@@ -26,7 +30,17 @@ public class SearchingServiceImpl implements SearchingService {
     private final String finalTagBegin = "<title>";
 
     private final String finalTagEnd = "</title>";
+
     private List<PageTemp> pages = new ArrayList<>();
+
+    @Autowired
+    private LemmaRepository lemmaRepository;
+
+    @Autowired
+    private SiteRepository siteRepository;
+
+    @Autowired
+    private IndexRepository indexRepository;
 
     @Override
     public SearchingResponse searching(String query, int offset,
@@ -50,10 +64,10 @@ public class SearchingServiceImpl implements SearchingService {
         listLemmas.keySet().forEach(l -> {
             List<Lemma> tempList;
             if (site == null) {
-                tempList = common.getLemmaRepository().findAllLemmas(l);
+                tempList = lemmaRepository.findAllLemmas(l);
             } else {
-                SiteModel s = common.getSiteRepository().findSiteByUrl(site).get(0);
-                tempList = common.getLemmaRepository().findLemmaBySite(l, Integer.toString(s.getId()));
+                SiteModel s = siteRepository.findSiteByUrl(site).get(0);
+                tempList = lemmaRepository.findLemmaBySite(l, Integer.toString(s.getId()));
             }
             tempList.forEach(t -> {
                 if (t.getFrequency() < common.getLemmaFrequency()) {
@@ -128,7 +142,7 @@ public class SearchingServiceImpl implements SearchingService {
     }
 
     private void addListPage(Lemma lemma) {
-        List<Index> listIndex = common.getIndexRepository().findIndex(lemma.getId());
+        List<Index> listIndex = indexRepository.findIndex(lemma.getId());
         PagesTempComparator comparator = new PagesTempComparator();
         listIndex.forEach(index -> {
             if (index.getPage().getContent().toLowerCase().contains(lemma.getLemma())) {
