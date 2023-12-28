@@ -84,7 +84,7 @@ public class IndexingServiceTask extends Thread {
     public void indexSiteModel(SiteModel siteModel) {
         try {
             Page page = new Page(siteModel, siteModel.getUrl());
-            SiteIndexing siteIndexing = new SiteIndexing(common, page, siteRepository,
+            SiteIndexing siteIndexing = new SiteIndexing(page, common, siteRepository,
                     pageRepository, lemmaRepository, indexRepository);
             siteIndexing.start();
         } catch (IOException e) {
