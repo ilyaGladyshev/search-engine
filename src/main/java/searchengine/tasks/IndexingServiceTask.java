@@ -48,7 +48,7 @@ public class IndexingServiceTask extends Thread {
         try {
             Iterable<SiteModel> siteIterable = siteRepository.findAll();
             List<SiteModel> oldSites = new ArrayList<>();
-            siteIterable.forEach(temp -> oldSites.add(temp));
+            siteIterable.forEach(oldSites::add);
             List<Site> sitesList = common.getSites();
             updateSites(oldSites, sitesList);
         } catch (Exception ex) {
@@ -70,7 +70,7 @@ public class IndexingServiceTask extends Thread {
 
     private SiteModel getOldSiteModel(List<SiteModel> oldSites, SiteModelComparator siteModelComparator, Site site) {
         SiteModel siteModel = new SiteModel(site);
-        if (oldSites.size() > 0) {
+        if (!oldSites.isEmpty()) {
             try {
                 SiteModel oldSite = oldSites.get(Collections.binarySearch(oldSites, siteModel, siteModelComparator));
                 siteRepository.delete(oldSite);

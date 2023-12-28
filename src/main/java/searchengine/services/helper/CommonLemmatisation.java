@@ -19,9 +19,9 @@ public class CommonLemmatisation {
         this.luceneMorphology = luceneMorphology;
     }
 
-    public HashMap<String, Integer> executePage(String rtext) throws IOException {
+    public HashMap<String, Integer> executePage(String russianText){
         HashMap<String, Integer> tempResult = new HashMap<>();
-        String[] listWords = rtext.split(" ");
+        String[] listWords = russianText.split(" ");
         for (String word : listWords) {
             if (!(word.isEmpty())) {
                 List<LemmaHelper> lemmaList = getLemmalist(word.trim().toLowerCase(), luceneMorphology);
@@ -58,10 +58,10 @@ public class CommonLemmatisation {
     public String getRussianText(String body) {
         Pattern pattern = Pattern.compile(russianRegExp);
         Matcher matcher = pattern.matcher(body);
-        StringBuilder rtext = new StringBuilder();
+        StringBuilder russianText = new StringBuilder();
         while (matcher.find()) {
-            rtext.append(matcher.group(0));
+            russianText.append(matcher.group(0));
         }
-        return rtext.toString();
+        return russianText.toString();
     }
 }

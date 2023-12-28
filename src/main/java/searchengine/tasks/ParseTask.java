@@ -24,8 +24,6 @@ import searchengine.repositories.SiteRepository;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.RecursiveAction;
 
 @Getter
@@ -164,16 +162,16 @@ public class ParseTask extends RecursiveAction {
     private void renewDateInDB(Page page) {
         try {
             List<Page> listOldPages = pageRepository.findPage(page.getPath());
-            if (listOldPages.size() > 0) {
-                listOldPages.forEach(op -> pageRepository.delete(op));
+            if (!listOldPages.isEmpty()) {
+                listOldPages.forEach(pageRepository::delete);
             }
             pageRepository.save(page);
-            /*if (!((Integer.toString(page.getCode()).charAt(0) == CHAR_CLIENT_ERROR) || (Integer.toString(page.getCode()).charAt(0) == CHAR_SERVER_ERROR))) {
+            if (!((Integer.toString(page.getCode()).charAt(0) == CHAR_CLIENT_ERROR) || (Integer.toString(page.getCode()).charAt(0) == CHAR_SERVER_ERROR))) {
                 Lemmatisation lemmatisation = new Lemmatisation(page, common, lemmaRepository, indexRepository);
                 lemmatisation.run();
                 System.out.println("Lemmatisation size " + lemmatisation.result.size());
                 lemmatisation.saveLemmas();
-            }*/
+            }
         } catch (Exception ex) {
             logger.error("Ошибка записи в базу " + ex.getMessage());
         }

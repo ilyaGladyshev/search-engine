@@ -24,8 +24,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 @Getter
-@Component
 @Setter
+@Component
 @RequiredArgsConstructor
 public class Lemmatisation extends Thread {
 
@@ -71,7 +71,9 @@ public class Lemmatisation extends Thread {
             String body = page.getContent();
             CommonLemmatisation commonLemmatisation = new CommonLemmatisation(common.luceneMorphology());
             String russianText = commonLemmatisation.getRussianText(body);
+            logger.log(Level.INFO, "russianText  "+ russianText);
             result = commonLemmatisation.getLemmasByPageText(russianText);
+            logger.log(Level.INFO, "result size "+ result.size());
         } catch (Exception e) {
             System.out.println("Ошибка лемматизации " + e.getMessage());
             logger.log(Level.ERROR, "Ошибка лемматизации " + e.getMessage());
