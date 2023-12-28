@@ -2,6 +2,8 @@ package searchengine;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
+import searchengine.config.CommonConfiguration;
 
 @SpringBootApplication
 public class Application {

@@ -1,20 +1,26 @@
 package searchengine.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import searchengine.config.CommonConfiguration;
+import org.springframework.stereotype.Component;
 import searchengine.config.Site;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "site")
 @Setter
 @Getter
+@Component
 @ToString
 public class SiteModel {
     @Id
@@ -37,9 +43,6 @@ public class SiteModel {
     @Column(nullable = false, columnDefinition = "VARCHAR(255)")
     private String name;
 
-    @OneToMany(mappedBy = "site", fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
-    Set<Page> pages = new HashSet<>();
-
     public SiteModel() {
     }
 
@@ -56,6 +59,7 @@ public class SiteModel {
         this.status = SiteStatus.INDEXING;
         this.statusTime = LocalDateTime.now();
     }
+
     public void renew() {
         this.status = SiteStatus.INDEXED;
         this.statusTime = LocalDateTime.now();

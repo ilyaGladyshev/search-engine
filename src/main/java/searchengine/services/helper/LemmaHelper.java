@@ -1,4 +1,4 @@
-package searchengine.services.temp;
+package searchengine.services.helper;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,7 +8,7 @@ import java.util.List;
 
 @Setter
 @Getter
-public class LemmaTemp {
+public class LemmaHelper {
     private String word;
 
     private String morphInfo;
@@ -17,7 +17,7 @@ public class LemmaTemp {
 
     private String part;
 
-    public LemmaTemp(String word, String normal, LuceneMorphology luceneMorphology) {
+    public LemmaHelper(String word, String normal, LuceneMorphology luceneMorphology) {
         this.word = word;
         List<String> wordBaseForm = luceneMorphology.getMorphInfo(word);
         this.morphInfo = wordBaseForm.get(0);

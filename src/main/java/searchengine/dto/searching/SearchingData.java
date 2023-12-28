@@ -1,7 +1,6 @@
 package searchengine.dto.searching;
 
 import lombok.Data;
-import searchengine.config.CommonConfiguration;
 import searchengine.model.Index;
 
 @Data
@@ -13,8 +12,7 @@ public class SearchingData {
     private String snippet;
     private double relevance;
 
-    public SearchingData(Index index,
-                         String snippet, double relevance) {
+    public SearchingData(Index index, String snippet, double relevance) {
         this.site = index.getPage().getSite().getUrl();
         this.siteName = index.getPage().getSite().getName();
         this.uri = index.getPage().getPath();

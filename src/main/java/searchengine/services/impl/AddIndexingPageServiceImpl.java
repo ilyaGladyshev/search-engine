@@ -3,22 +3,29 @@ package searchengine.services.impl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jsoup.Connection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import searchengine.Application;
 import searchengine.config.CommonConfiguration;
 import searchengine.dto.common.CommonResponse;
 import searchengine.config.Site;
 import searchengine.model.Page;
 import searchengine.model.SiteModel;
+import searchengine.repositories.IndexRepository;
+import searchengine.repositories.LemmaRepository;
 import searchengine.repositories.PageRepository;
 import searchengine.repositories.SiteRepository;
 import searchengine.services.AddIndexingPageService;
-import searchengine.tasks.Lemmatization;
+import searchengine.tasks.Lemmatisation;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
+import static java.net.URLDecoder.decode;
 
 @Service
 @RequiredArgsConstructor
@@ -26,17 +33,25 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
 
     private final CommonConfiguration common;
 
-    @Autowired
-    private PageRepository pageRepository;
+    private final Logger logger = LogManager.getLogger(Application.class);
 
     @Autowired
-    private SiteRepository siteRepository;
+    private final PageRepository pageRepository;
+
+    @Autowired
+    private final SiteRepository siteRepository;
+
+    @Autowired
+    private final IndexRepository indexRepository;
+
+    @Autowired
+    private final LemmaRepository lemmaRepository;
 
     private String decodeUrl(String url) {
-        return java.net.URLDecoder.decode(url.substring(url.indexOf('=') + 1), StandardCharsets.UTF_8);
+        return decode(url.substring(url.indexOf('=') + 1), StandardCharsets.UTF_8);
     }
 
-    private String checkPage(String url) {
+    private String checkPageByRootSite(String url) {
         String result = "";
         for (Site s : common.getSites()) {
             if (url.contains(s.getUrl())) {
@@ -88,14 +103,13 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     public CommonResponse add(String url) {
         url = decodeUrl(url);
         CommonResponse response = new CommonResponse();
-        String siteUrl = checkPage(url);
-        common.getLogger().log(Level.INFO, "Добавление страницы " + url + " в очередь на индексацию");
+        String siteUrl = checkPageByRootSite(url);
+        logger.log(Level.INFO, "Добавление страницы " + url + " в очередь на индексацию");
         if (!(siteUrl.isEmpty())) {
             try {
-                lemmatization(siteUrl, response, url);
+                lemmatisation(siteUrl, response, url);
             } catch (Exception ex) {
-                common.getLogger().log(Level.ERROR, ex.getMessage());
-                ;
+                logger.log(Level.ERROR, ex.getMessage());
                 response.setResult(false);
                 response.setError("Не удалось проиндексировать страницу");
             }
@@ -106,12 +120,12 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
         return response;
     }
 
-    public void lemmatization(String siteUrl, CommonResponse response, String url) throws Exception {
+    public void lemmatisation(String siteUrl, CommonResponse response, String url) throws Exception {
         SiteModel siteModel = getSiteModel(siteUrl);
         Page page = getPage(siteModel, url);
-        Lemmatization lemmatization = new Lemmatization(page, common);
-        lemmatization.start();
-        lemmatization.saveLemmas();
+        Lemmatisation lemmatisation = new Lemmatisation(page, common, lemmaRepository, indexRepository);
+        lemmatisation.start();
+        lemmatisation.saveLemmas();
         response.setResult(true);
     }
 }

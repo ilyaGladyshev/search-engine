@@ -2,22 +2,14 @@ package searchengine.config;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.lucene.morphology.LuceneMorphology;
 import org.apache.lucene.morphology.russian.RussianLuceneMorphology;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
-import searchengine.Application;
 import searchengine.model.Page;
-import searchengine.repositories.IndexRepository;
-import searchengine.repositories.LemmaRepository;
-import searchengine.repositories.PageRepository;
-import searchengine.repositories.SiteRepository;
 import searchengine.tasks.ParseTask;
 
 import java.io.IOException;
@@ -31,23 +23,34 @@ import java.util.List;
 @ConfigurationProperties(prefix = "indexing-settings")
 public class CommonConfiguration {
 
-    private final Logger logger = LogManager.getLogger(Application.class);
+    private final boolean IGNORE_HTTP_ERRORS = true;
 
-    private final int countProcessors = Runtime.getRuntime().availableProcessors();
+    private final boolean IGNORE_CONTENT_TYPE = true;
+
+    private final boolean FOLLOW_REDIRECTS = false;
+
+    private final int COUNT_PROCESSORS = Runtime.getRuntime().availableProcessors();
 
     private List<Site> sites;
 
-    private String user_agent;
+    private String USER_AGENT;
 
-    private String referrer;
+    private String REFERRER;
 
-    private int lemmaFrequency;
+    private int LEMMA_FREQUENCY;
 
-    private int snippetWords;
+    private int SNIPPET_WORDS;
+
+    private int PAUSE_DURATION;
 
     private List<ParseTask> listParseTasks = new ArrayList<>();
 
     private Boolean isInterrupt = false;
+
+    @Bean
+    public ApplicationContextProvider contextProvider() {
+        return new ApplicationContextProvider();
+    }
 
     @Bean
     public LuceneMorphology luceneMorphology() throws IOException {
@@ -56,11 +59,12 @@ public class CommonConfiguration {
 
     public Connection getConnection(Page page) {
         return Jsoup.connect(page.getSite().getUrl() + page.getPath())
-                .ignoreHttpErrors(true)
-                .userAgent(user_agent)
-                .followRedirects(false)
-                .referrer(referrer)
-                .ignoreContentType(true).timeout(15000).followRedirects(false);
+                .ignoreHttpErrors(IGNORE_HTTP_ERRORS)
+                .userAgent(USER_AGENT)
+                .followRedirects(FOLLOW_REDIRECTS)
+                .referrer(REFERRER)
+                .ignoreContentType(IGNORE_CONTENT_TYPE)
+                .timeout(PAUSE_DURATION);
     }
 
 }

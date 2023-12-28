@@ -1,55 +1,64 @@
 package searchengine.services.impl;
 
-import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import searchengine.Application;
 import searchengine.config.CommonConfiguration;
 import searchengine.dto.searching.SearchingData;
 import searchengine.dto.searching.SearchingDataComparator;
 import searchengine.dto.searching.SearchingResponse;
-import searchengine.model.*;
+import searchengine.model.SiteModel;
+import searchengine.model.Lemma;
+import searchengine.model.Index;
+import searchengine.model.LemmaComparator;
 import searchengine.repositories.IndexRepository;
 import searchengine.repositories.LemmaRepository;
 import searchengine.repositories.SiteRepository;
 import searchengine.services.SearchingService;
-import searchengine.services.temp.CommonLemmatization;
-import searchengine.services.temp.PageTemp;
-import searchengine.services.temp.PagesTempComparator;
-import searchengine.services.temp.SnippetClass;
+import searchengine.services.helpers.CommonLemmatisation;
+import searchengine.services.helpers.PageHelper;
+import searchengine.services.helpers.PagesHelperComparator;
+import searchengine.services.helpers.SnippetClass;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 
 @Service
 @RequiredArgsConstructor
 public class SearchingServiceImpl implements SearchingService {
 
     private final CommonConfiguration common;
-
-    private final String finalTagBegin = "<title>";
-
-    private final String finalTagEnd = "</title>";
-
-    private List<PageTemp> pages = new ArrayList<>();
+    private final Logger logger = LogManager.getLogger(Application.class);
+    private final String FINAL_TAG_BEGIN = "<title>";
+    private final String FINAL_TAG_END = "</title>";
+    private final List<PageHelper> pages = new ArrayList<>();
 
     @Autowired
-    private LemmaRepository lemmaRepository;
+    private final LemmaRepository lemmaRepository;
 
     @Autowired
-    private SiteRepository siteRepository;
+    private final SiteRepository siteRepository;
 
     @Autowired
-    private IndexRepository indexRepository;
+    private final IndexRepository indexRepository;
 
     @Override
-    public SearchingResponse searching(String query, int offset,
-                                       int limit, String site) {
+    public SearchingResponse searchingResponse(String query, int offset,
+                                               int limit, String site) {
         SearchingResponse searchingResponce = new SearchingResponse();
-        common.getLogger().log(Level.INFO, "Начат поиск по ключевым словам " + query);
+        logger.log(Level.INFO, "Начат поиск по ключевым словам " + query);
         try {
-            CommonLemmatization commonLemmatization = new CommonLemmatization(common.luceneMorphology());
-            HashMap<String, Integer> listLemmas = commonLemmatization.executePage(query);
+            CommonLemmatisation commonLemmatisation = new CommonLemmatisation(common.luceneMorphology());
+            Map<String, Integer> listLemmas = commonLemmatisation.getLemmasByPageText(query);
             List<Lemma> listLemmaModel = getListLemmaModel(listLemmas, site);
             searchingResponce = getSearchResponse(listLemmaModel);
         } catch (Exception e) {
@@ -59,7 +68,7 @@ public class SearchingServiceImpl implements SearchingService {
         return searchingResponce;
     }
 
-    private List<Lemma> getListLemmaModel(HashMap<String, Integer> listLemmas, String site) {
+    private List<Lemma> getListLemmaModel(Map<String, Integer> listLemmas, String site) {
         List<Lemma> resultList = new ArrayList<>();
         listLemmas.keySet().forEach(l -> {
             List<Lemma> tempList;
@@ -69,11 +78,8 @@ public class SearchingServiceImpl implements SearchingService {
                 SiteModel s = siteRepository.findSiteByUrl(site).get(0);
                 tempList = lemmaRepository.findLemmaBySite(l, Integer.toString(s.getId()));
             }
-            tempList.forEach(t -> {
-                if (t.getFrequency() < common.getLemmaFrequency()) {
-                    resultList.add(t);
-                }
-            });
+            tempList.stream().filter(t -> (t.getFrequency() < common.getLEMMA_FREQUENCY()))
+                    .forEach(resultList::add);
         });
         return resultList;
     }
@@ -94,15 +100,15 @@ public class SearchingServiceImpl implements SearchingService {
     private void parsePage(List<Lemma> lemmaList, SearchingResponse searchingResponse) throws IOException {
         int count = 0;
         lemmaList.forEach(l -> addListPage(l));
-        CommonLemmatization commonLemmatization = new CommonLemmatization(common.luceneMorphology());
+        CommonLemmatisation commonLemmatisation = new CommonLemmatisation(common.luceneMorphology());
         long maxRelevance = getMaxRelevance();
-        for (PageTemp pageTemp : pages) {
-            String content = commonLemmatization.getRussianText(pageTemp.getPage().getContent());
+        for (PageHelper pageHelper : pages) {
+            String content = commonLemmatisation.getRussianText(pageHelper.getPage().getContent());
             String[] words = content.split(" ");
-            for (Index i : pageTemp.getListIndex()) {
+            for (Index i : pageHelper.getListIndex()) {
                 SnippetClass snippet = getSnippet(words, i.getLemma().getLemma());
                 SearchingData data = new SearchingData(i,
-                        snippet.text(), (double) pageTemp.getRelevance() / maxRelevance);
+                        snippet.text(), (double) pageHelper.getRelevance() / maxRelevance);
                 data.setTitle(getTitle(i.getPage().getContent()));
                 searchingResponse.getData().add(data);
                 words = Arrays.copyOfRange(words, snippet.index(), words.length);
@@ -114,8 +120,8 @@ public class SearchingServiceImpl implements SearchingService {
 
     public String getTitle(String content) {
         String result = "";
-        int start = content.indexOf(finalTagBegin) + 7;
-        int fin = content.indexOf(finalTagEnd);
+        int start = content.indexOf(FINAL_TAG_BEGIN) + 7;
+        int fin = content.indexOf(FINAL_TAG_END);
         try {
             result = content.substring(start, fin);
         } catch (Exception ignored) {
@@ -133,8 +139,8 @@ public class SearchingServiceImpl implements SearchingService {
             }
             index++;
         }
-        int start = foundedInd - common.getSnippetWords() > 0 ? foundedInd - 7 : 0;
-        int fin = foundedInd + common.getSnippetWords() < words.length ? foundedInd + 7 : words.length;
+        int start = foundedInd - common.getSNIPPET_WORDS() > 0 ? foundedInd - 7 : 0;
+        int fin = foundedInd + common.getSNIPPET_WORDS() < words.length ? foundedInd + 7 : words.length;
         for (int i = start; i < fin; i++) {
             str += i != foundedInd ? " " + words[i] : " <b>" + words[i] + "</b>";
         }
@@ -143,10 +149,10 @@ public class SearchingServiceImpl implements SearchingService {
 
     private void addListPage(Lemma lemma) {
         List<Index> listIndex = indexRepository.findIndex(lemma.getId());
-        PagesTempComparator comparator = new PagesTempComparator();
+        PagesHelperComparator comparator = new PagesHelperComparator();
         listIndex.forEach(index -> {
             if (index.getPage().getContent().toLowerCase().contains(lemma.getLemma())) {
-                PageTemp temp = new PageTemp(index.getPage());
+                PageHelper temp = new PageHelper(index.getPage());
                 pages.sort(comparator);
                 int i = Collections.binarySearch(pages, temp, comparator);
                 if (i >= 0) {
@@ -158,13 +164,13 @@ public class SearchingServiceImpl implements SearchingService {
         });
     }
 
-    public void executeOldPage(PageTemp page, Lemma lemma, Index index) {
+    public void executeOldPage(PageHelper page, Lemma lemma, Index index) {
         page.getListLemma().add(lemma);
         page.getListIndex().add(index);
         page.setRelevance(page.getRelevance() + index.getRank());
     }
 
-    public void executeNewPage(PageTemp page, Lemma lemma, Index index) {
+    public void executeNewPage(PageHelper page, Lemma lemma, Index index) {
         page.getListLemma().add(lemma);
         page.getListIndex().add(index);
         page.setRelevance(index.getRank());
@@ -173,9 +179,9 @@ public class SearchingServiceImpl implements SearchingService {
 
     private long getMaxRelevance() {
         long result = 0;
-        for (PageTemp pageTemp : pages) {
-            if (pageTemp.getRelevance() > result) {
-                result = pageTemp.getRelevance();
+        for (PageHelper pageHelper : pages) {
+            if (pageHelper.getRelevance() > result) {
+                result = pageHelper.getRelevance();
             }
         }
         return result;

@@ -2,77 +2,89 @@ package searchengine.tasks;
 
 import jakarta.transaction.Transactional;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jsoup.Connection;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import searchengine.Application;
 import searchengine.config.CommonConfiguration;
 import searchengine.model.Page;
+import searchengine.repositories.IndexRepository;
+import searchengine.repositories.LemmaRepository;
 import searchengine.repositories.PageRepository;
 import searchengine.repositories.SiteRepository;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.RecursiveAction;
 
 @Getter
+@Component
+@RequiredArgsConstructor
 public class ParseTask extends RecursiveAction {
 
-    private final int pauseDuration = 500;
+    private final int PAUSE_DURATION = 500;
 
-    private final String cssQuery = "a";
+    private final Logger logger = LogManager.getLogger(Application.class);
 
-    private final String hashText = "#";
+    private final String CSS_QUERY = "a";
 
-    private final String questionText = "?";
+    private final String HASH_TEXT = "#";
 
-    private final char slashSymbol = '/';
+    private final String QUESTION_TEXT = "?";
 
-    private final char charServerError = '5';
+    private final char SLASH_SYMBOL = '/';
 
-    private final char charClientError = '4';
+    private final char CHAR_SERVER_ERROR = '5';
 
-    private Page page;
+    private final char CHAR_CLIENT_ERROR = '4';
 
-    private List<ParseTask> taskList = new ArrayList<>();
+    private final List<ParseTask> taskList = new ArrayList<>();
 
-    private TreeMap<String, Page> links = new TreeMap<>();
-
-    private CommonConfiguration common;
+    private final Page page;
 
     @Autowired
-    private SiteRepository siteRepository;
+    private final CommonConfiguration common;
 
     @Autowired
-    private PageRepository pageRepository;
+    private final SiteRepository siteRepository;
 
-    public ParseTask(Page page, CommonConfiguration common) {
-        this.page = page;
-        this.common = common;
-    }
+    @Autowired
+    private final PageRepository pageRepository;
+
+    @Autowired
+    private final IndexRepository indexRepository;
+
+    @Autowired
+    private final LemmaRepository lemmaRepository;
 
     private String formatReference(String ref) {
-        ref = (!ref.contains(page.getSite().getUrl())) ? page.getSite().getUrl() + ref : ref;
-        return ref;
+        return (!ref.contains(page.getSite().getUrl())) ? page.getSite().getUrl() + ref : ref;
     }
 
     private Boolean isCorrectAttr(String attr) {
         if (attr.contains(page.getSite().getUrl())) {
             return true;
-        } else return (attr.indexOf(slashSymbol) == 0)
-                && (attr.length() > 1);
+        } else {
+            return (attr.indexOf(SLASH_SYMBOL) == 0)
+                    && (attr.length() > 1);
+        }
     }
 
     private Boolean isCorrectLink(String link) {
-        return (!(link.contains(hashText))) && (!(link.contains(questionText)));
+        return (!(link.contains(HASH_TEXT))) && (!(link.contains(QUESTION_TEXT)));
     }
 
-    @Transactional
     private List<Page> findPage(String url) {
         return pageRepository.findPage(url);
     }
@@ -83,23 +95,23 @@ public class ParseTask extends RecursiveAction {
         } catch (InterruptedException e) {
             page.getSite().renewError("Ошибка при установки паузы");
             siteRepository.save(page.getSite());
-            common.getLogger().error("Ошибка при установки паузы " + e.getMessage());
+            logger.error("Ошибка при установки паузы " + e.getMessage());
         }
     }
 
     @Override
     protected void compute() {
         try {
-            common.getLogger().log(Level.INFO, "Парсинг страницы " + page.getSite().getUrl() + page.getPath());
-            pause(pauseDuration);
+            logger.log(Level.INFO, "Парсинг страницы " + page.getSite().getUrl() + page.getPath());
+            pause(PAUSE_DURATION);
             Connection connection = common.getConnection(page);
             Document doc = connection.get();
-            Elements elements = doc.select(cssQuery);
+            Elements elements = doc.select(CSS_QUERY);
             parsePage(elements);
         } catch (IOException ex) {
             page.getSite().renewError("Ошибка при открытии страницы");
             siteRepository.save(page.getSite());
-            common.getLogger().log(Level.ERROR, "Ошибка при открытии страницы " + ex.getMessage());
+            logger.log(Level.ERROR, "Ошибка при открытии страницы " + ex.getMessage());
         }
         if (!(common.getIsInterrupt())) {
             joinTasks(taskList);
@@ -128,10 +140,10 @@ public class ParseTask extends RecursiveAction {
 
     private void forkTasks(String ref, Page newPage) {
         if (!(common.getIsInterrupt())) {
-            ParseTask task = new ParseTask(newPage, common);
+            ParseTask task = new ParseTask(page, common, siteRepository,
+                    pageRepository, indexRepository, lemmaRepository);
             task.fork();
             taskList.add(task);
-            links.put(ref, newPage);
         }
     }
 
@@ -143,21 +155,30 @@ public class ParseTask extends RecursiveAction {
                 page.getSite().renewError("Ошибка при вызове метода join");
                 siteRepository.save(page.getSite());
                 Thread.currentThread().interrupt();
-                common.getLogger().error("Ошибка при вызове метода join " + ex.getMessage());
+                logger.error("Ошибка при вызове метода join " + ex.getMessage());
             }
         }
     }
 
     @Transactional
     private void renewDateInDB(Page page) {
-        pageRepository.save(page);
-        if (!((Integer.toString(page.getCode()).charAt(0) == charClientError) || (Integer.toString(page.getCode()).charAt(0) == charServerError))) {
-            Lemmatization lemmatization = new Lemmatization(page, common);
-            lemmatization.run();
-            System.out.println("Lemmatization size " + lemmatization.result.size());
-            lemmatization.saveLemmas();
+        try {
+            List<Page> listOldPages = pageRepository.findPage(page.getPath());
+            if (listOldPages.size() > 0) {
+                listOldPages.forEach(op -> pageRepository.delete(op));
+            }
+            pageRepository.save(page);
+            /*if (!((Integer.toString(page.getCode()).charAt(0) == CHAR_CLIENT_ERROR) || (Integer.toString(page.getCode()).charAt(0) == CHAR_SERVER_ERROR))) {
+                Lemmatisation lemmatisation = new Lemmatisation(page, common, lemmaRepository, indexRepository);
+                lemmatisation.run();
+                System.out.println("Lemmatisation size " + lemmatisation.result.size());
+                lemmatisation.saveLemmas();
+            }*/
+        } catch (Exception ex) {
+            logger.error("Ошибка записи в базу " + ex.getMessage());
         }
     }
+
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {

@@ -2,32 +2,47 @@ package searchengine.tasks;
 
 import jakarta.transaction.Transactional;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import searchengine.Application;
 import searchengine.config.CommonConfiguration;
 import searchengine.model.Index;
 import searchengine.model.Lemma;
 import searchengine.model.Page;
 import searchengine.repositories.IndexRepository;
 import searchengine.repositories.LemmaRepository;
-import searchengine.services.temp.CommonLemmatization;
+import searchengine.services.helpers.CommonLemmatisation;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Iterator;
+import java.util.Map;
 
 @Getter
-public class Lemmatization extends Thread {
+@Component
+@Setter
+@RequiredArgsConstructor
+public class Lemmatisation extends Thread {
 
-    private Page page;
+    private final Page page;
 
-    public HashMap<String, Integer> result = new HashMap<>();
-
-    private CommonConfiguration common;
-
-    @Autowired
-    private IndexRepository indexRepository;
+    private final Logger logger = LogManager.getLogger(Application.class);
 
     @Autowired
-    private LemmaRepository lemmaRepository;
+    private final CommonConfiguration common;
+
+    public Map<String, Integer> result = new HashMap<>();
+
+    @Autowired
+    private final LemmaRepository lemmaRepository;
+
+    @Autowired
+    private final IndexRepository indexRepository;
 
     @Transactional
     public void saveLemmas() {
@@ -49,23 +64,17 @@ public class Lemmatization extends Thread {
         }
     }
 
-    public Lemmatization(Page page, CommonConfiguration common) {
-        this.page = page;
-        this.common = common;
-    }
-
     @Override
     public void run() {
-        super.run();
         try {
-            common.getLogger().log(Level.INFO, "Старт лемматизации для страницы " + page.getPath());
+            logger.log(Level.INFO, "Старт лемматизации для страницы " + page.getPath());
             String body = page.getContent();
-            CommonLemmatization commonLemmatization = new CommonLemmatization(common.luceneMorphology());
-            String rtext = commonLemmatization.getRussianText(body);
-            result = commonLemmatization.executePage(rtext);
+            CommonLemmatisation commonLemmatisation = new CommonLemmatisation(common.luceneMorphology());
+            String russianText = commonLemmatisation.getRussianText(body);
+            result = commonLemmatisation.getLemmasByPageText(russianText);
         } catch (Exception e) {
             System.out.println("Ошибка лемматизации " + e.getMessage());
-            common.getLogger().log(Level.ERROR, "Ошибка лемматизации " + e.getMessage());
+            logger.log(Level.ERROR, "Ошибка лемматизации " + e.getMessage());
         }
     }
 }

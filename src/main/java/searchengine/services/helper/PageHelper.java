@@ -1,4 +1,4 @@
-package searchengine.services.temp;
+package searchengine.services.helper;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,13 +11,13 @@ import java.util.List;
 
 @Setter
 @Getter
-public class PageTemp {
+public class PageHelper {
     private Page page;
     private List<Lemma> listLemma = new ArrayList<>();
     private List<Index> listIndex = new ArrayList<>();
     private long relevance = 0;
 
-    public PageTemp(Page page) {
+    public PageHelper(Page page) {
         this.page = page;
     }
 }
