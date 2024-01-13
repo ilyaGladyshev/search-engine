@@ -16,7 +16,7 @@ import searchengine.model.Lemma;
 import searchengine.model.Page;
 import searchengine.repositories.IndexRepository;
 import searchengine.repositories.LemmaRepository;
-import searchengine.services.helpers.CommonLemmatisation;
+import searchengine.services.helpers.CommonLemmatisationHelper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -69,9 +69,9 @@ public class LemmatisationTask extends Thread {
         try {
             logger.log(Level.INFO, "Старт лемматизации для страницы " + page.getPath());
             String body = page.getContent();
-            CommonLemmatisation commonLemmatisation = new CommonLemmatisation(common.luceneMorphology());
-            String russianText = commonLemmatisation.getRussianText(body);
-            result = commonLemmatisation.getLemmasByPageText(russianText);
+            CommonLemmatisationHelper commonLemmatisationHelper = new CommonLemmatisationHelper(common.luceneMorphology());
+            String russianText = commonLemmatisationHelper.getRussianText(body);
+            result = commonLemmatisationHelper.getLemmasByPageText(russianText);
         } catch (Exception e) {
             System.out.println("Ошибка лемматизации " + e.getMessage());
             logger.log(Level.ERROR, "Ошибка лемматизации " + e.getMessage());

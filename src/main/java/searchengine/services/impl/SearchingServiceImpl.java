@@ -19,7 +19,7 @@ import searchengine.repositories.IndexRepository;
 import searchengine.repositories.LemmaRepository;
 import searchengine.repositories.SiteRepository;
 import searchengine.services.SearchingService;
-import searchengine.services.helpers.CommonLemmatisation;
+import searchengine.services.helpers.CommonLemmatisationHelper;
 import searchengine.services.helpers.PageHelper;
 import searchengine.services.helpers.PagesHelperComparator;
 import searchengine.services.helpers.SnippetClass;
@@ -59,8 +59,8 @@ public class SearchingServiceImpl implements SearchingService {
         SearchingResponse searchingResponce = new SearchingResponse();
         logger.log(Level.INFO, "Начат поиск по ключевым словам " + query);
         try {
-            CommonLemmatisation commonLemmatisation = new CommonLemmatisation(common.luceneMorphology());
-            Map<String, Integer> listLemmas = commonLemmatisation.getLemmasByPageText(query);
+            CommonLemmatisationHelper commonLemmatisationHelper = new CommonLemmatisationHelper(common.luceneMorphology());
+            Map<String, Integer> listLemmas = commonLemmatisationHelper.getLemmasByPageText(query);
             List<Lemma> listLemmaModel = getListLemmaModel(listLemmas, site);
             searchingResponce = getSearchResponse(listLemmaModel);
         } catch (Exception e) {
@@ -102,10 +102,10 @@ public class SearchingServiceImpl implements SearchingService {
     private void parsePage(List<Lemma> lemmaList, SearchingResponse searchingResponse) throws IOException {
         int count = 0;
         lemmaList.forEach(l -> addListPage(l));
-        CommonLemmatisation commonLemmatisation = new CommonLemmatisation(common.luceneMorphology());
+        CommonLemmatisationHelper commonLemmatisationHelper = new CommonLemmatisationHelper(common.luceneMorphology());
         long maxRelevance = getMaxRelevance();
         for (PageHelper pageHelper : pages) {
-            String content = commonLemmatisation.getRussianText(pageHelper.getPage().getContent());
+            String content = commonLemmatisationHelper.getRussianText(pageHelper.getPage().getContent());
             String[] words = content.split(" ");
             for (Index i : pageHelper.getListIndex()) {
                 SnippetClass snippet = getSnippet(words, i.getLemma().getLemma());

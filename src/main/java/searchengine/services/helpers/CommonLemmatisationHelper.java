@@ -11,7 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
-public class CommonLemmatisation {
+public class CommonLemmatisationHelper {
 
     private final String RUSSIAN_REG_EXP = "[а-яА-Я ]";
 
