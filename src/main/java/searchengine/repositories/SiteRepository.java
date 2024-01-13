@@ -11,8 +11,6 @@ import java.util.List;
 
 @Repository
 public interface SiteRepository extends CrudRepository<SiteModel, Integer> {
-    @Query(value = "SELECT * from site s", nativeQuery = true)
-    List<SiteModel> findAllSites();
 
     List<SiteModel> findAllByUrl(String url);
 

@@ -22,12 +22,6 @@ import searchengine.repositories.PageRepository;
 import searchengine.repositories.SiteRepository;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.RecursiveAction;
@@ -132,7 +126,6 @@ public class ParseTask extends RecursiveAction {
             for (Attribute attr : element.attributes()) {
                 if (isCorrectAttr(attr.getValue())) {
                     String ref = formatReference(attr.getValue());
-                    logger.log(Level.INFO, ref);
                     List<Page> foundedPages = findPage(ref.substring(page.getSite().getUrl().length()));
                     if (isCorrectLink(ref) && (foundedPages.isEmpty()) && (!(common.getIsInterrupt()))) {
                         Page newPage = new Page(page.getSite(), ref);
@@ -185,7 +178,6 @@ public class ParseTask extends RecursiveAction {
             if (!(isErrorPage(page))) {
                 LemmatisationTask lemmatisationTask = new LemmatisationTask(page, common, lemmaRepository, indexRepository);
                 lemmatisationTask.run();
-                System.out.println("Lemmatisation size " + lemmatisationTask.result.size());
                 lemmatisationTask.saveLemmas();
             }
         } catch (Exception ex) {
