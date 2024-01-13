@@ -1,6 +1,6 @@
 package searchengine.services;
 
-import searchengine.dto.common.CommonResponse;
+import searchengine.responses.common.CommonResponse;
 
 public interface StartIndexingService {
     CommonResponse indexing();

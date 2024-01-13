@@ -9,8 +9,8 @@ import java.util.List;
 
 @Repository
 public interface LemmaRepository extends CrudRepository<Lemma, Integer> {
-    @Query(value = "SELECT * from lemma l where l.lemma = :lemma", nativeQuery = true)
-    List<Lemma> findAllLemmas(String lemma);
+
+    List<Lemma> findAllByLemma(String lemma);
 
     @Query(value = "SELECT * from lemma l where l.lemma = :lemma and l.site_id = :site", nativeQuery = true)
     List<Lemma> findLemmaBySite(String lemma, String site);

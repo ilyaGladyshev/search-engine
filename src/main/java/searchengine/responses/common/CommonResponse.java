@@ -1,4 +1,4 @@
-package searchengine.dto.common;
+package searchengine.responses.common;
 
 import lombok.Data;
 

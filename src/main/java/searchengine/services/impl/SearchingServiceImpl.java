@@ -8,9 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.Application;
 import searchengine.config.CommonConfiguration;
-import searchengine.dto.searching.SearchingData;
-import searchengine.dto.searching.SearchingDataComparator;
-import searchengine.dto.searching.SearchingResponse;
+import searchengine.responses.searching.SearchingData;
+import searchengine.responses.searching.SearchingDataComparator;
+import searchengine.responses.searching.SearchingResponse;
 import searchengine.model.SiteModel;
 import searchengine.model.Lemma;
 import searchengine.model.Index;
@@ -40,6 +40,8 @@ public class SearchingServiceImpl implements SearchingService {
     private final Logger logger = LogManager.getLogger(Application.class);
     private final String FINAL_TAG_BEGIN = "<title>";
     private final String FINAL_TAG_END = "</title>";
+
+    private final int TAG_TITLE_LENGTH = 7;
     private final List<PageHelper> pages = new ArrayList<>();
 
     @Autowired
@@ -63,7 +65,7 @@ public class SearchingServiceImpl implements SearchingService {
             searchingResponce = getSearchResponse(listLemmaModel);
         } catch (Exception e) {
             searchingResponce.setResult(false);
-            searchingResponce.setError("Задан пустой поисковый запрос");
+            searchingResponce.setError("Задан некорректный поисковый запрос");
         }
         return searchingResponce;
     }
@@ -73,9 +75,9 @@ public class SearchingServiceImpl implements SearchingService {
         listLemmas.keySet().forEach(l -> {
             List<Lemma> tempList;
             if (site == null) {
-                tempList = lemmaRepository.findAllLemmas(l);
+                tempList = lemmaRepository.findAllByLemma(l);
             } else {
-                SiteModel s = siteRepository.findSiteByUrl(site).get(0);
+                SiteModel s = siteRepository.findAllByUrl(site).get(0);
                 tempList = lemmaRepository.findLemmaBySite(l, Integer.toString(s.getId()));
             }
             tempList.stream().filter(t -> (t.getFrequency() < common.getLEMMA_FREQUENCY()))
@@ -120,11 +122,12 @@ public class SearchingServiceImpl implements SearchingService {
 
     public String getTitle(String content) {
         String result = "";
-        int start = content.indexOf(FINAL_TAG_BEGIN) + 7;
+        int start = content.indexOf(FINAL_TAG_BEGIN) + TAG_TITLE_LENGTH;
         int fin = content.indexOf(FINAL_TAG_END);
         try {
             result = content.substring(start, fin);
         } catch (Exception ignored) {
+            logger.log(Level.ERROR, "Ошибка при получении заголовка");
         }
         return result;
     }
@@ -139,8 +142,8 @@ public class SearchingServiceImpl implements SearchingService {
             }
             index++;
         }
-        int start = foundedInd - common.getSNIPPET_WORDS() > 0 ? foundedInd - 7 : 0;
-        int fin = foundedInd + common.getSNIPPET_WORDS() < words.length ? foundedInd + 7 : words.length;
+        int start = foundedInd - common.getSNIPPET_WORDS() > 0 ? foundedInd - TAG_TITLE_LENGTH : 0;
+        int fin = foundedInd + common.getSNIPPET_WORDS() < words.length ? foundedInd + TAG_TITLE_LENGTH : words.length;
         for (int i = start; i < fin; i++) {
             str += i != foundedInd ? " " + words[i] : " <b>" + words[i] + "</b>";
         }
@@ -148,7 +151,7 @@ public class SearchingServiceImpl implements SearchingService {
     }
 
     private void addListPage(Lemma lemma) {
-        List<Index> listIndex = indexRepository.findIndex(lemma.getId());
+        List<Index> listIndex = indexRepository.findAllByLemma(lemma.getId());
         PagesHelperComparator comparator = new PagesHelperComparator();
         listIndex.forEach(index -> {
             if (index.getPage().getContent().toLowerCase().contains(lemma.getLemma())) {

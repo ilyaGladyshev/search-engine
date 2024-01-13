@@ -27,7 +27,7 @@ import java.util.Map;
 @Setter
 @Component
 @RequiredArgsConstructor
-public class Lemmatisation extends Thread {
+public class LemmatisationTask extends Thread {
 
     private final Page page;
 
@@ -51,7 +51,7 @@ public class Lemmatisation extends Thread {
         Iterator<String> iterator = result.keySet().iterator();
         while (iterator.hasNext()) {
             strLemma = iterator.next();
-            List<Lemma> listLemma = lemmaRepository.findAllLemmas(strLemma);
+            List<Lemma> listLemma = lemmaRepository.findAllByLemma(strLemma);
             if (listLemma.isEmpty()) {
                 lemma = new Lemma(strLemma, page.getSite());
             } else {

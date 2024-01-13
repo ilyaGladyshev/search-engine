@@ -14,8 +14,7 @@ public interface SiteRepository extends CrudRepository<SiteModel, Integer> {
     @Query(value = "SELECT * from site s", nativeQuery = true)
     List<SiteModel> findAllSites();
 
-    @Query(value = "SELECT * from site s where url = :url", nativeQuery = true)
-    List<SiteModel> findSiteByUrl(String url);
+    List<SiteModel> findAllByUrl(String url);
 
     @Query(value = "SELECT s.last_error from site s where url = :url", nativeQuery = true)
     String getLastErrorByUrl(String url);

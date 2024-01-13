@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface IndexRepository extends CrudRepository<Index, Integer> {
-    @Query(value = "SELECT * from `index` i where i.lemma_id = :lemma", nativeQuery = true)
-    List<Index> findIndex(int lemma);
+
+    List<Index> findAllByLemma(int lemma);
 }

@@ -22,6 +22,12 @@ import searchengine.repositories.PageRepository;
 import searchengine.repositories.SiteRepository;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.RecursiveAction;
@@ -46,6 +52,8 @@ public class ParseTask extends RecursiveAction {
     private final char CHAR_SERVER_ERROR = '5';
 
     private final char CHAR_CLIENT_ERROR = '4';
+
+    private final int MEDIUMTEXT_LENGTH = 16777215;
 
     private final List<ParseTask> taskList = new ArrayList<>();
 
@@ -84,7 +92,7 @@ public class ParseTask extends RecursiveAction {
     }
 
     private List<Page> findPage(String url) {
-        return pageRepository.findPage(url);
+        return pageRepository.findAllByPath(url);
     }
 
     private void pause(int duration) {
@@ -116,29 +124,33 @@ public class ParseTask extends RecursiveAction {
         }
     }
 
+    private String truncateBody(String body){
+        return (body.length() < MEDIUMTEXT_LENGTH) ? body : body.substring(0, MEDIUMTEXT_LENGTH);
+    }
     private void parsePage(Elements elements) throws IOException {
         for (Element element : elements) {
             for (Attribute attr : element.attributes()) {
                 if (isCorrectAttr(attr.getValue())) {
                     String ref = formatReference(attr.getValue());
+                    logger.log(Level.INFO, ref);
                     List<Page> foundedPages = findPage(ref.substring(page.getSite().getUrl().length()));
                     if (isCorrectLink(ref) && (foundedPages.isEmpty()) && (!(common.getIsInterrupt()))) {
                         Page newPage = new Page(page.getSite(), ref);
                         Connection connection = common.getConnection(page);
                         Connection.Response response = connection.execute();
                         newPage.setCode(response.statusCode());
-                        newPage.setContent(response.body());
+                        newPage.setContent(truncateBody(response.body()));
                         renewDateInDB(newPage);
-                        forkTasks(ref, newPage);
+                        forkTasks(newPage);
                     }
                 }
             }
         }
     }
 
-    private void forkTasks(String ref, Page newPage) {
+    private void forkTasks(Page newPage) {
         if (!(common.getIsInterrupt())) {
-            ParseTask task = new ParseTask(page, common, siteRepository,
+            ParseTask task = new ParseTask(newPage, common, siteRepository,
                     pageRepository, indexRepository, lemmaRepository);
             task.fork();
             taskList.add(task);
@@ -158,19 +170,23 @@ public class ParseTask extends RecursiveAction {
         }
     }
 
+    private Boolean isErrorPage(Page page) {
+        return (Integer.toString(page.getCode()).charAt(0) == CHAR_CLIENT_ERROR) || (Integer.toString(page.getCode()).charAt(0) == CHAR_SERVER_ERROR);
+    }
+
     @Transactional
     private void renewDateInDB(Page page) {
         try {
-            List<Page> listOldPages = pageRepository.findPage(page.getPath());
+            List<Page> listOldPages = pageRepository.findAllByPath(page.getPath());
             if (!listOldPages.isEmpty()) {
                 listOldPages.forEach(pageRepository::delete);
             }
             pageRepository.save(page);
-            if (!((Integer.toString(page.getCode()).charAt(0) == CHAR_CLIENT_ERROR) || (Integer.toString(page.getCode()).charAt(0) == CHAR_SERVER_ERROR))) {
-                Lemmatisation lemmatisation = new Lemmatisation(page, common, lemmaRepository, indexRepository);
-                lemmatisation.run();
-                System.out.println("Lemmatisation size " + lemmatisation.result.size());
-                lemmatisation.saveLemmas();
+            if (!(isErrorPage(page))) {
+                LemmatisationTask lemmatisationTask = new LemmatisationTask(page, common, lemmaRepository, indexRepository);
+                lemmatisationTask.run();
+                System.out.println("Lemmatisation size " + lemmatisationTask.result.size());
+                lemmatisationTask.saveLemmas();
             }
         } catch (Exception ex) {
             logger.error("Ошибка записи в базу " + ex.getMessage());

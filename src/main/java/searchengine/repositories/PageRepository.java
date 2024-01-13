@@ -10,8 +10,8 @@ import java.util.List;
 
 @Repository
 public interface PageRepository extends CrudRepository<Page, Integer> {
-    @Query(value = "SELECT * from page p where p.path = :path", nativeQuery = true)
-    List<Page> findPage(String path);
+
+    List<Page> findAllByPath(String path);
 
     @Query(value = "SELECT Count(p.id) from site s " +
             "inner join page p " +

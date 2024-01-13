@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.Application;
 import searchengine.config.CommonConfiguration;
-import searchengine.dto.common.CommonResponse;
+import searchengine.responses.common.CommonResponse;
 import searchengine.repositories.IndexRepository;
 import searchengine.repositories.LemmaRepository;
 import searchengine.repositories.PageRepository;

@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.Application;
 import searchengine.config.CommonConfiguration;
-import searchengine.dto.common.CommonResponse;
+import searchengine.responses.common.CommonResponse;
 import searchengine.config.Site;
 import searchengine.model.Page;
 import searchengine.model.SiteModel;
@@ -19,7 +19,7 @@ import searchengine.repositories.LemmaRepository;
 import searchengine.repositories.PageRepository;
 import searchengine.repositories.SiteRepository;
 import searchengine.services.AddIndexingPageService;
-import searchengine.tasks.Lemmatisation;
+import searchengine.tasks.LemmatisationTask;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -64,7 +64,7 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     @Transactional
     private Page getPage(SiteModel site, String url) throws IOException {
         String path = url.substring(site.getUrl().length());
-        List<Page> listFounded = pageRepository.findPage(path);
+        List<Page> listFounded = pageRepository.findAllByPath(path);
         if (!listFounded.isEmpty()) {
             Page oldPage = listFounded.get(0);
             pageRepository.delete(oldPage);
@@ -89,7 +89,7 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
 
     @Transactional
     private SiteModel getSiteModel(String url) {
-        List<SiteModel> listFounded = siteRepository.findSiteByUrl(url);
+        List<SiteModel> listFounded = siteRepository.findAllByUrl(url);
         if (listFounded.isEmpty()) {
             SiteModel site = new SiteModel(formatUrl(url));
             siteRepository.save(site);
@@ -123,9 +123,9 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     public void lemmatisation(String siteUrl, CommonResponse response, String url) throws Exception {
         SiteModel siteModel = getSiteModel(siteUrl);
         Page page = getPage(siteModel, url);
-        Lemmatisation lemmatisation = new Lemmatisation(page, common, lemmaRepository, indexRepository);
-        lemmatisation.start();
-        lemmatisation.saveLemmas();
+        LemmatisationTask lemmatisationTask = new LemmatisationTask(page, common, lemmaRepository, indexRepository);
+        lemmatisationTask.start();
+        lemmatisationTask.saveLemmas();
         response.setResult(true);
     }
 }
