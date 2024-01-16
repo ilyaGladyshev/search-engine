@@ -23,6 +23,7 @@ import searchengine.services.helpers.CommonLemmatisationHelper;
 import searchengine.services.helpers.PageHelper;
 import searchengine.services.helpers.PagesHelperComparator;
 import searchengine.services.helpers.SnippetClass;
+import searchengine.services.helpers.PageContainer;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -41,8 +42,8 @@ public class SearchingServiceImpl implements SearchingService {
     private final String FINAL_TAG_BEGIN = "<title>";
     private final String FINAL_TAG_END = "</title>";
 
+    private final PageContainer pageContainer = new PageContainer();
     private final int TAG_TITLE_LENGTH = 7;
-    private final List<PageHelper> pages = new ArrayList<>();
 
     @Autowired
     private final LemmaRepository lemmaRepository;
@@ -95,7 +96,6 @@ public class SearchingServiceImpl implements SearchingService {
         findLemmaInPages(lemmaList, searchingResponse);
         SearchingDataComparator dataComparator = new SearchingDataComparator();
         searchingResponse.getData().sort(dataComparator);
-        pages.clear();
         return searchingResponse;
     }
 
@@ -104,7 +104,7 @@ public class SearchingServiceImpl implements SearchingService {
         lemmaList.forEach(this::addListPage);
         CommonLemmatisationHelper commonLemmatisationHelper = new CommonLemmatisationHelper(common.luceneMorphology());
         long maxRelevance = getMaxRelevance();
-        for (PageHelper pageHelper : pages) {
+        for (PageHelper pageHelper : pageContainer.getListPages()) {
             String content = commonLemmatisationHelper.getRussianText(pageHelper.getPage().getContent());
             String[] words = content.split(" ");
             for (Index i : pageHelper.getListIndex()) {
@@ -156,10 +156,10 @@ public class SearchingServiceImpl implements SearchingService {
         listIndex.forEach(index -> {
             if (index.getPage().getContent().toLowerCase().contains(lemma.getLemma())) {
                 PageHelper temp = new PageHelper(index.getPage());
-                pages.sort(comparator);
-                int i = Collections.binarySearch(pages, temp, comparator);
+                pageContainer.getListPages().sort(comparator);
+                int i = Collections.binarySearch(pageContainer.getListPages(), temp, comparator);
                 if (i >= 0) {
-                    executeOldPage(pages.get(i), lemma, index);
+                    executeOldPage(pageContainer.getListPages().get(i), lemma, index);
                 } else {
                     executeNewPage(temp, lemma, index);
                 }
@@ -177,12 +177,12 @@ public class SearchingServiceImpl implements SearchingService {
         page.getListLemma().add(lemma);
         page.getListIndex().add(index);
         page.setRelevance(index.getRank());
-        pages.add(page);
+        pageContainer.getListPages().add(page);
     }
 
     private long getMaxRelevance() {
         long result = 0;
-        for (PageHelper pageHelper : pages) {
+        for (PageHelper pageHelper : pageContainer.getListPages()) {
             if (pageHelper.getRelevance() > result) {
                 result = pageHelper.getRelevance();
             }
