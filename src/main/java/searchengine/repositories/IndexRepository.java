@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface IndexRepository extends CrudRepository<Index, Integer> {
 
-    List<Index> findAllByLemma(int lemma);
+    List<Index> findAllByLemma_id(int lemma);
 }

@@ -92,16 +92,16 @@ public class SearchingServiceImpl implements SearchingService {
         searchingResponse.setData(new ArrayList<>());
         LemmaComparator comparator = new LemmaComparator();
         lemmaList.sort(comparator);
-        parsePage(lemmaList, searchingResponse);
+        findLemmaInPages(lemmaList, searchingResponse);
         SearchingDataComparator dataComparator = new SearchingDataComparator();
         searchingResponse.getData().sort(dataComparator);
         pages.clear();
         return searchingResponse;
     }
 
-    private void parsePage(List<Lemma> lemmaList, SearchingResponse searchingResponse) throws IOException {
+    private void findLemmaInPages(List<Lemma> lemmaList, SearchingResponse searchingResponse) throws IOException {
         int count = 0;
-        lemmaList.forEach(l -> addListPage(l));
+        lemmaList.forEach(this::addListPage);
         CommonLemmatisationHelper commonLemmatisationHelper = new CommonLemmatisationHelper(common.luceneMorphology());
         long maxRelevance = getMaxRelevance();
         for (PageHelper pageHelper : pages) {
@@ -151,7 +151,7 @@ public class SearchingServiceImpl implements SearchingService {
     }
 
     private void addListPage(Lemma lemma) {
-        List<Index> listIndex = indexRepository.findAllByLemma(lemma.getId());
+        List<Index> listIndex = indexRepository.findAllByLemma_id(lemma.getId());
         PagesHelperComparator comparator = new PagesHelperComparator();
         listIndex.forEach(index -> {
             if (index.getPage().getContent().toLowerCase().contains(lemma.getLemma())) {
