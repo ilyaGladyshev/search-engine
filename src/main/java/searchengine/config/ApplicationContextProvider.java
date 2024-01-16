@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ApplicationContextProvider implements ApplicationContextAware {
 
-    private static ApplicationContext context = new FileSystemXmlApplicationContext("classpath:task-bean.xml");;
+    private static ApplicationContext context = new FileSystemXmlApplicationContext("classpath:task-bean.xml");
 
     public ApplicationContext getApplicationContext() {
         return context;
