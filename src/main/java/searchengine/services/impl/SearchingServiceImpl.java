@@ -42,7 +42,7 @@ public class SearchingServiceImpl implements SearchingService {
     private final String FINAL_TAG_BEGIN = "<title>";
     private final String FINAL_TAG_END = "</title>";
 
-    private final PageContainer pageContainer = new PageContainer();
+    private PageContainer pageContainer;
     private final int TAG_TITLE_LENGTH = 7;
 
     @Autowired
@@ -63,6 +63,7 @@ public class SearchingServiceImpl implements SearchingService {
             CommonLemmatisationHelper commonLemmatisationHelper = new CommonLemmatisationHelper(common.luceneMorphology());
             Map<String, Integer> listLemmas = commonLemmatisationHelper.getLemmasByPageText(query);
             List<Lemma> listLemmaModel = getListLemmaModel(listLemmas, site);
+            pageContainer = new PageContainer();
             searchingResponce = getSearchResponse(listLemmaModel);
         } catch (Exception e) {
             searchingResponce.setResult(false);
