@@ -17,8 +17,6 @@ import org.springframework.stereotype.Component;
 import searchengine.Application;
 import searchengine.config.CommonConfiguration;
 import searchengine.model.Page;
-import searchengine.repositories.IndexRepository;
-import searchengine.repositories.LemmaRepository;
 import searchengine.repositories.PageRepository;
 import searchengine.repositories.SiteRepository;
 
@@ -63,12 +61,6 @@ public class ParseTask extends RecursiveAction {
 
     @Autowired
     private PageRepository pageRepository;
-
-    @Autowired
-    private IndexRepository indexRepository;
-
-    @Autowired
-    private LemmaRepository lemmaRepository;
 
     private String formatReference(String ref) {
         return (!ref.contains(page.getSite().getUrl())) ? page.getSite().getUrl() + ref : ref;
