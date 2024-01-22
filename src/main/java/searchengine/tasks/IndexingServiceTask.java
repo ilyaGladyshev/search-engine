@@ -1,11 +1,12 @@
 package searchengine.tasks;
 
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Lookup;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import searchengine.Application;
 import searchengine.config.Site;
@@ -13,9 +14,6 @@ import searchengine.config.CommonConfiguration;
 import searchengine.model.Page;
 import searchengine.model.SiteModelComparator;
 import searchengine.model.SiteModel;
-import searchengine.repositories.IndexRepository;
-import searchengine.repositories.LemmaRepository;
-import searchengine.repositories.PageRepository;
 import searchengine.repositories.SiteRepository;
 
 import java.io.IOException;
@@ -24,24 +22,16 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
+@Scope("prototype")
 public class IndexingServiceTask extends Thread {
-
-    private final CommonConfiguration common;
 
     private final Logger logger = LogManager.getLogger(Application.class);
 
     @Autowired
-    private final SiteRepository siteRepository;
+    private SiteRepository siteRepository;
 
     @Autowired
-    private final PageRepository pageRepository;
-
-    @Autowired
-    private final LemmaRepository lemmaRepository;
-
-    @Autowired
-    private final IndexRepository indexRepository;
+    private CommonConfiguration common;
 
     @Override
     public void run() {
@@ -81,11 +71,16 @@ public class IndexingServiceTask extends Thread {
         return siteModel;
     }
 
+    @Lookup
+    public SiteIndexing createSiteIndexing() {
+        return null;
+    }
+
     public void indexSiteModel(SiteModel siteModel) {
         try {
             Page page = new Page(siteModel, siteModel.getUrl());
-            SiteIndexing siteIndexing = new SiteIndexing(page, common, siteRepository,
-                    pageRepository, lemmaRepository, indexRepository);
+            SiteIndexing siteIndexing = createSiteIndexing();
+            siteIndexing.setPage(page);
             siteIndexing.start();
         } catch (IOException e) {
             logger.log(Level.ERROR, e.getMessage());

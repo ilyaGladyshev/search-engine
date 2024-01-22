@@ -123,7 +123,8 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     public void lemmatisation(String siteUrl, CommonResponse response, String url) throws Exception {
         SiteModel siteModel = getSiteModel(siteUrl);
         Page page = getPage(siteModel, url);
-        LemmatisationTask lemmatisationTask = new LemmatisationTask(page, common, lemmaRepository, indexRepository);
+        LemmatisationTask lemmatisationTask = common.createLemmatisationTask();
+        lemmatisationTask.setPage(page);
         lemmatisationTask.start();
         lemmatisationTask.saveLemmas();
         response.setResult(true);

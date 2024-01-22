@@ -2,7 +2,7 @@ package searchengine.tasks;
 
 import jakarta.transaction.Transactional;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,6 +12,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import searchengine.Application;
 import searchengine.config.CommonConfiguration;
@@ -27,11 +28,14 @@ import java.util.List;
 import java.util.concurrent.RecursiveAction;
 
 @Getter
+@Setter
 @Component
-@RequiredArgsConstructor
+@Scope("prototype")
 public class ParseTask extends RecursiveAction {
 
     private final int PAUSE_DURATION = 500;
+
+    private final int MEDIUMTEXT_LENGTH = 16777215;
 
     private final Logger logger = LogManager.getLogger(Application.class);
 
@@ -47,33 +51,33 @@ public class ParseTask extends RecursiveAction {
 
     private final char CHAR_CLIENT_ERROR = '4';
 
-    private final int MEDIUMTEXT_LENGTH = 16777215;
-
     private final List<ParseTask> taskList = new ArrayList<>();
 
-    private final Page page;
+    private Page page;
 
     @Autowired
-    private final CommonConfiguration common;
+    private CommonConfiguration common;
 
     @Autowired
-    private final SiteRepository siteRepository;
+    private SiteRepository siteRepository;
 
     @Autowired
-    private final PageRepository pageRepository;
+    private PageRepository pageRepository;
 
     @Autowired
-    private final IndexRepository indexRepository;
+    private IndexRepository indexRepository;
 
     @Autowired
-    private final LemmaRepository lemmaRepository;
+    private LemmaRepository lemmaRepository;
 
     private String formatReference(String ref) {
         return (!ref.contains(page.getSite().getUrl())) ? page.getSite().getUrl() + ref : ref;
     }
 
     private Boolean isCorrectAttr(String attr) {
-        if (attr.contains(page.getSite().getUrl())) {
+        if (attr.equals(page.getSite().getUrl())) {
+            return false;
+        } else if (attr.contains(page.getSite().getUrl())) {
             return true;
         } else {
             return (attr.indexOf(SLASH_SYMBOL) == 0)
@@ -82,7 +86,8 @@ public class ParseTask extends RecursiveAction {
     }
 
     private Boolean isCorrectLink(String link) {
-        return (!(link.contains(HASH_TEXT))) && (!(link.contains(QUESTION_TEXT)));
+        return (!(link.contains(HASH_TEXT))) && (!(link.contains(QUESTION_TEXT))
+                && (!(link.isEmpty())));
     }
 
     private List<Page> findPage(String url) {
@@ -118,9 +123,10 @@ public class ParseTask extends RecursiveAction {
         }
     }
 
-    private String truncateBody(String body){
+    private String truncateBody(String body) {
         return (body.length() < MEDIUMTEXT_LENGTH) ? body : body.substring(0, MEDIUMTEXT_LENGTH);
     }
+
     private void parsePage(Elements elements) throws IOException {
         for (Element element : elements) {
             for (Attribute attr : element.attributes()) {
@@ -143,8 +149,8 @@ public class ParseTask extends RecursiveAction {
 
     private void forkTasks(Page newPage) {
         if (!(common.getIsInterrupt())) {
-            ParseTask task = new ParseTask(newPage, common, siteRepository,
-                    pageRepository, indexRepository, lemmaRepository);
+            ParseTask task = common.createParseTask();
+            task.setPage(newPage);
             task.fork();
             taskList.add(task);
         }
@@ -164,7 +170,8 @@ public class ParseTask extends RecursiveAction {
     }
 
     private Boolean isErrorPage(Page page) {
-        return (Integer.toString(page.getCode()).charAt(0) == CHAR_CLIENT_ERROR) || (Integer.toString(page.getCode()).charAt(0) == CHAR_SERVER_ERROR);
+        return (Integer.toString(page.getCode()).charAt(0) == CHAR_CLIENT_ERROR)
+                || (Integer.toString(page.getCode()).charAt(0) == CHAR_SERVER_ERROR);
     }
 
     @Transactional
@@ -176,7 +183,8 @@ public class ParseTask extends RecursiveAction {
             }
             pageRepository.save(page);
             if (!(isErrorPage(page))) {
-                LemmatisationTask lemmatisationTask = new LemmatisationTask(page, common, lemmaRepository, indexRepository);
+                LemmatisationTask lemmatisationTask = common.createLemmatisationTask();
+                lemmatisationTask.setPage(page);
                 lemmatisationTask.run();
                 lemmatisationTask.saveLemmas();
             }

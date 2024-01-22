@@ -2,12 +2,12 @@ package searchengine.tasks;
 
 import jakarta.transaction.Transactional;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import searchengine.Application;
 import searchengine.config.CommonConfiguration;
@@ -26,23 +26,23 @@ import java.util.Map;
 @Getter
 @Setter
 @Component
-@RequiredArgsConstructor
+@Scope("prototype")
 public class LemmatisationTask extends Thread {
-
-    private final Page page;
 
     private final Logger logger = LogManager.getLogger(Application.class);
 
-    @Autowired
-    private final CommonConfiguration common;
+    private Page page;
 
     public Map<String, Integer> result = new HashMap<>();
 
     @Autowired
-    private final LemmaRepository lemmaRepository;
+    private CommonConfiguration common;
 
     @Autowired
-    private final IndexRepository indexRepository;
+    private LemmaRepository lemmaRepository;
+
+    @Autowired
+    private IndexRepository indexRepository;
 
     @Transactional
     public void saveLemmas() {

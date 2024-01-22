@@ -4,15 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 import searchengine.Application;
 import searchengine.config.CommonConfiguration;
 import searchengine.responses.common.CommonResponse;
-import searchengine.repositories.IndexRepository;
-import searchengine.repositories.LemmaRepository;
-import searchengine.repositories.PageRepository;
-import searchengine.repositories.SiteRepository;
 import searchengine.services.StartIndexingService;
 import searchengine.tasks.IndexingServiceTask;
 
@@ -24,25 +20,17 @@ public class StartIndexingServiceImpl implements StartIndexingService {
 
     private final Logger logger = LogManager.getLogger(Application.class);
 
-    @Autowired
-    private final SiteRepository siteRepository;
-
-    @Autowired
-    private final PageRepository pageRepository;
-
-    @Autowired
-    private final LemmaRepository lemmaRepository;
-
-    @Autowired
-    private final IndexRepository indexRepository;
+    @Lookup
+    public IndexingServiceTask createIndexingServiceTask() {
+        return null;
+    }
 
     @Override
     public CommonResponse indexing() {
         CommonResponse response = new CommonResponse();
         try {
             logger.log(Level.INFO, "Начало индексации");
-            IndexingServiceTask indexingServiceTask = new IndexingServiceTask(common, siteRepository,
-                    pageRepository, lemmaRepository, indexRepository);
+            IndexingServiceTask indexingServiceTask = createIndexingServiceTask();
             indexingServiceTask.start();
             response.setResult(true);
         } catch (Exception ex) {

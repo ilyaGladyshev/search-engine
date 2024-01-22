@@ -6,10 +6,12 @@ import org.apache.lucene.morphology.LuceneMorphology;
 import org.apache.lucene.morphology.russian.RussianLuceneMorphology;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
+import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import searchengine.model.Page;
+import searchengine.tasks.LemmatisationTask;
 import searchengine.tasks.ParseTask;
 
 import java.io.IOException;
@@ -43,13 +45,22 @@ public class CommonConfiguration {
 
     private int PAUSE_DURATION;
 
+    private String proxy_ip;
+
+    private int proxy_port;
+
     private List<ParseTask> listParseTasks = new ArrayList<>();
 
     private Boolean isInterrupt = false;
 
-    @Bean
-    public ApplicationContextProvider contextProvider() {
-        return new ApplicationContextProvider();
+    @Lookup
+    public ParseTask createParseTask() {
+        return null;
+    }
+
+    @Lookup
+    public LemmatisationTask createLemmatisationTask() {
+        return null;
     }
 
     @Bean
@@ -66,5 +77,4 @@ public class CommonConfiguration {
                 .ignoreContentType(IGNORE_CONTENT_TYPE)
                 .timeout(PAUSE_DURATION);
     }
-
 }
