@@ -41,12 +41,6 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     @Autowired
     private final SiteRepository siteRepository;
 
-    @Autowired
-    private final IndexRepository indexRepository;
-
-    @Autowired
-    private final LemmaRepository lemmaRepository;
-
     private String decodeUrl(String url) {
         return decode(url.substring(url.indexOf('=') + 1), StandardCharsets.UTF_8);
     }
