@@ -31,7 +31,6 @@ public class CommonConfiguration {
     private final static String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
     private final static String REFERRER = "www.yandex.com";
     private final static int PAUSE_DURATION = 15000;
-    private final int COUNT_PROCESSORS = Runtime.getRuntime().availableProcessors();
     private List<Site> sites;
     private List<ParseTask> listParseTasks = new ArrayList<>();
     private Boolean isInterrupt = false;

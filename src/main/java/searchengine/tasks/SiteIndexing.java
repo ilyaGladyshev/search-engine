@@ -21,7 +21,7 @@ import java.util.concurrent.ForkJoinPool;
 public class SiteIndexing extends Thread {
 
     private final Logger logger = LogManager.getLogger(Application.class);
-
+    private final static int COUNT_PROCESSORS = Runtime.getRuntime().availableProcessors();
     @Autowired
     private final CommonConfiguration common;
     private Page page;
@@ -31,6 +31,6 @@ public class SiteIndexing extends Thread {
         ParseTask parseTask = common.createParseTask();
         parseTask.setPage(page);
         common.getListParseTasks().add(parseTask);
-        new ForkJoinPool(common.getCOUNT_PROCESSORS()).invoke(parseTask);
+        new ForkJoinPool(COUNT_PROCESSORS).invoke(parseTask);
     }
 }
