@@ -3,7 +3,6 @@ package searchengine.responses.searching;
 import lombok.Data;
 import searchengine.model.Index;
 import searchengine.model.Page;
-import searchengine.model.SiteModel;
 
 @Data
 public class SearchingData {
