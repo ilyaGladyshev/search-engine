@@ -25,10 +25,6 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     private final CommonConfiguration common;
 
-    private String formatErrorData(String errorData) {
-        return (errorData == null) ? "" : errorData;
-    }
-
     @Autowired
     private final LemmaRepository lemmaRepository;
 
@@ -37,7 +33,9 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     @Autowired
     private final PageRepository pageRepository;
-
+    private String formatErrorData(String errorData) {
+        return (errorData == null) ? "" : errorData;
+    }
     @Override
     public StatisticsResponse getStatistics() {
         TotalStatistics total = new TotalStatistics();
@@ -46,8 +44,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         List<DetailedStatisticsItem> detailed = new ArrayList<>();
         List<Site> sitesList = common.getSites();
         executeSitesList(sitesList, total, detailed);
-        StatisticsResponse response = getStatisticsResponse(total, detailed);
-        return response;
+        return getStatisticsResponse(total, detailed);
     }
 
     private static StatisticsResponse getStatisticsResponse(TotalStatistics total, List<DetailedStatisticsItem> detailed) {

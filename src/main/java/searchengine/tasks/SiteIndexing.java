@@ -1,5 +1,6 @@
 package searchengine.tasks;
 
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -16,15 +17,14 @@ import java.util.concurrent.ForkJoinPool;
 @Component
 @Setter
 @Scope("prototype")
+@RequiredArgsConstructor
 public class SiteIndexing extends Thread {
 
     private final Logger logger = LogManager.getLogger(Application.class);
 
-    private Page page;
-
     @Autowired
-    private CommonConfiguration common;
-
+    private final CommonConfiguration common;
+    private Page page;
     @Override
     public void run() {
         logger.log(Level.INFO, "Старт процесса индексации для сайта " + page.getSite().getUrl());

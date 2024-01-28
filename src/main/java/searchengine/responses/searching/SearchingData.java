@@ -2,6 +2,8 @@ package searchengine.responses.searching;
 
 import lombok.Data;
 import searchengine.model.Index;
+import searchengine.model.Page;
+import searchengine.model.SiteModel;
 
 @Data
 public class SearchingData {
@@ -12,10 +14,11 @@ public class SearchingData {
     private String snippet;
     private double relevance;
 
-    public SearchingData(Index index, String snippet, double relevance) {
+    public SearchingData(Index index, Page page,
+                         String snippet, double relevance) {
         this.site = index.getPage().getSite().getUrl();
         this.siteName = index.getPage().getSite().getName();
-        this.uri = index.getPage().getPath();
+        this.uri = page.getPath();
         this.snippet = snippet;
         this.relevance = relevance;
     }

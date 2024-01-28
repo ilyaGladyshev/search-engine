@@ -2,6 +2,7 @@ package searchengine.tasks;
 
 import jakarta.transaction.Transactional;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -27,22 +28,21 @@ import java.util.Map;
 @Setter
 @Component
 @Scope("prototype")
+@RequiredArgsConstructor
 public class LemmatisationTask extends Thread {
 
+    public Map<String, Integer> result = new HashMap<>();
     private final Logger logger = LogManager.getLogger(Application.class);
 
+    @Autowired
+    private final CommonConfiguration common;
+
+    @Autowired
+    private final LemmaRepository lemmaRepository;
+
+    @Autowired
+    private final IndexRepository indexRepository;
     private Page page;
-
-    public Map<String, Integer> result = new HashMap<>();
-
-    @Autowired
-    private CommonConfiguration common;
-
-    @Autowired
-    private LemmaRepository lemmaRepository;
-
-    @Autowired
-    private IndexRepository indexRepository;
 
     @Transactional
     public void saveLemmas() {

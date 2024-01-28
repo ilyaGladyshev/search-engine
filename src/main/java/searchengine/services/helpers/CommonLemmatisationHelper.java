@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class CommonLemmatisationHelper {
 
-    private final String RUSSIAN_REG_EXP = "[а-яА-Я ]";
+    private final static String RUSSIAN_REG_EXP = "[а-яА-Я ]";
 
     private final LuceneMorphology luceneMorphology;
 
@@ -26,6 +26,16 @@ public class CommonLemmatisationHelper {
             }
         }
         return tempResult;
+    }
+
+    public String getRussianText(String body) {
+        Pattern pattern = Pattern.compile(RUSSIAN_REG_EXP);
+        Matcher matcher = pattern.matcher(body);
+        StringBuilder russianText = new StringBuilder();
+        while (matcher.find()) {
+            russianText.append(matcher.group(0));
+        }
+        return russianText.toString();
     }
 
     private void lemmatisateWord(Map<String, Integer> tempResult, String word) {
@@ -58,15 +68,5 @@ public class CommonLemmatisationHelper {
                 .peek(lH -> lH.customization(luceneMorphology))
                 .forEach(result::add);
         return result;
-    }
-
-    public String getRussianText(String body) {
-        Pattern pattern = Pattern.compile(RUSSIAN_REG_EXP);
-        Matcher matcher = pattern.matcher(body);
-        StringBuilder russianText = new StringBuilder();
-        while (matcher.find()) {
-            russianText.append(matcher.group(0));
-        }
-        return russianText.toString();
     }
 }

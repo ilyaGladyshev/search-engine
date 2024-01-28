@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 import searchengine.Application;
-import searchengine.config.CommonConfiguration;
 import searchengine.responses.common.CommonResponse;
 import searchengine.services.StartIndexingService;
 import searchengine.tasks.IndexingServiceTask;
@@ -15,8 +14,6 @@ import searchengine.tasks.IndexingServiceTask;
 @Service
 @RequiredArgsConstructor
 public class StartIndexingServiceImpl implements StartIndexingService {
-
-    private final CommonConfiguration common;
 
     private final Logger logger = LogManager.getLogger(Application.class);
 

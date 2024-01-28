@@ -14,8 +14,6 @@ import searchengine.responses.common.CommonResponse;
 import searchengine.config.Site;
 import searchengine.model.Page;
 import searchengine.model.SiteModel;
-import searchengine.repositories.IndexRepository;
-import searchengine.repositories.LemmaRepository;
 import searchengine.repositories.PageRepository;
 import searchengine.repositories.SiteRepository;
 import searchengine.services.AddIndexingPageService;
@@ -32,7 +30,6 @@ import static java.net.URLDecoder.decode;
 public class AddIndexingPageServiceImpl implements AddIndexingPageService {
 
     private final CommonConfiguration common;
-
     private final Logger logger = LogManager.getLogger(Application.class);
 
     @Autowired

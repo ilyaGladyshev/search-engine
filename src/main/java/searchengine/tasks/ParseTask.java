@@ -2,6 +2,7 @@ package searchengine.tasks;
 
 import jakarta.transaction.Transactional;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -29,38 +30,29 @@ import java.util.concurrent.RecursiveAction;
 @Setter
 @Component
 @Scope("prototype")
+@RequiredArgsConstructor
 public class ParseTask extends RecursiveAction {
 
     private final int PAUSE_DURATION = 500;
-
     private final int MEDIUMTEXT_LENGTH = 16777215;
-
     private final Logger logger = LogManager.getLogger(Application.class);
-
     private final String CSS_QUERY = "a";
-
     private final String HASH_TEXT = "#";
-
     private final String QUESTION_TEXT = "?";
-
     private final char SLASH_SYMBOL = '/';
-
     private final char CHAR_SERVER_ERROR = '5';
-
     private final char CHAR_CLIENT_ERROR = '4';
-
     private final List<ParseTask> taskList = new ArrayList<>();
-
     private Page page;
 
     @Autowired
-    private CommonConfiguration common;
+    private final CommonConfiguration common;
 
     @Autowired
-    private SiteRepository siteRepository;
+    private final SiteRepository siteRepository;
 
     @Autowired
-    private PageRepository pageRepository;
+    private final PageRepository pageRepository;
 
     private String formatReference(String ref) {
         return (!ref.contains(page.getSite().getUrl())) ? page.getSite().getUrl() + ref : ref;

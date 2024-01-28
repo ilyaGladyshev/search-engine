@@ -10,11 +10,8 @@ import java.util.List;
 @Getter
 public class LemmaHelper {
     private String word;
-
     private String morphInfo;
-
     private String form;
-
     private String part;
 
     public LemmaHelper(String word, String normal) {

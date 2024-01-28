@@ -1,6 +1,8 @@
 package searchengine.tasks;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,16 +24,23 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
+@Setter
 @Scope("prototype")
+@RequiredArgsConstructor
 public class IndexingServiceTask extends Thread {
 
     private final Logger logger = LogManager.getLogger(Application.class);
 
     @Autowired
-    private SiteRepository siteRepository;
+    private final SiteRepository siteRepository;
 
     @Autowired
-    private CommonConfiguration common;
+    private final CommonConfiguration common;
+
+    @Lookup
+    public SiteIndexing createSiteIndexing() {
+        return null;
+    }
 
     @Override
     public void run() {
@@ -58,6 +67,17 @@ public class IndexingServiceTask extends Thread {
         });
     }
 
+    public void indexSiteModel(SiteModel siteModel) {
+        try {
+            Page page = new Page(siteModel, siteModel.getUrl());
+            SiteIndexing siteIndexing = createSiteIndexing();
+            siteIndexing.setPage(page);
+            siteIndexing.start();
+        } catch (IOException e) {
+            logger.log(Level.ERROR, e.getMessage());
+        }
+    }
+
     private SiteModel getOldSiteModel(List<SiteModel> oldSites, SiteModelComparator siteModelComparator, Site site) {
         SiteModel siteModel = new SiteModel(site);
         if (!oldSites.isEmpty()) {
@@ -71,19 +91,4 @@ public class IndexingServiceTask extends Thread {
         return siteModel;
     }
 
-    @Lookup
-    public SiteIndexing createSiteIndexing() {
-        return null;
-    }
-
-    public void indexSiteModel(SiteModel siteModel) {
-        try {
-            Page page = new Page(siteModel, siteModel.getUrl());
-            SiteIndexing siteIndexing = createSiteIndexing();
-            siteIndexing.setPage(page);
-            siteIndexing.start();
-        } catch (IOException e) {
-            logger.log(Level.ERROR, e.getMessage());
-        }
-    }
 }
