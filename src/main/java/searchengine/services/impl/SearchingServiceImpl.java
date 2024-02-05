@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import searchengine.Application;
 import searchengine.config.CommonConfiguration;
 import searchengine.responses.searching.SearchingData;
 import searchengine.responses.searching.SearchingDataComparator;
@@ -42,7 +41,7 @@ public class SearchingServiceImpl implements SearchingService {
     private final static String FINAL_TAG_END = "</title>";
     private final static int TAG_TITLE_LENGTH = 7;
     private final CommonConfiguration common;
-    private final Logger logger = LogManager.getLogger(Application.class);
+    private final Logger logger = LogManager.getLogger();
     @Autowired
     private final LemmaRepository lemmaRepository;
     @Autowired

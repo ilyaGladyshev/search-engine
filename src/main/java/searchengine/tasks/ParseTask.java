@@ -34,7 +34,7 @@ import java.util.concurrent.RecursiveAction;
 public class ParseTask extends RecursiveAction {
     private final int PAUSE_DURATION = 500;
     private final int MEDIUMTEXT_LENGTH = 16777215;
-    private final Logger logger = LogManager.getLogger(Application.class);
+    private final Logger logger = LogManager.getLogger();
     private final String CSS_QUERY = "a";
     private final String HASH_TEXT = "#";
     private final String QUESTION_TEXT = "?";
@@ -42,13 +42,13 @@ public class ParseTask extends RecursiveAction {
     private final char CHAR_SERVER_ERROR = '5';
     private final char CHAR_CLIENT_ERROR = '4';
     private final List<ParseTask> taskList = new ArrayList<>();
-    private Page page;
     @Autowired
     private final CommonConfiguration common;
     @Autowired
     private final SiteRepository siteRepository;
     @Autowired
     private final PageRepository pageRepository;
+    private Page page;
 
     private String formatReference(String ref) {
         return (!ref.contains(page.getSite().getUrl())) ? page.getSite().getUrl() + ref : ref;
@@ -172,7 +172,6 @@ public class ParseTask extends RecursiveAction {
             logger.error("Ошибка записи в базу " + ex.getMessage());
         }
     }
-
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {

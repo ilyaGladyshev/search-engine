@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import org.jsoup.Connection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import searchengine.Application;
 import searchengine.config.CommonConfiguration;
 import searchengine.responses.common.CommonResponse;
 import searchengine.config.Site;
@@ -29,7 +28,7 @@ import static java.net.URLDecoder.decode;
 @RequiredArgsConstructor
 public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     private final CommonConfiguration common;
-    private final Logger logger = LogManager.getLogger(Application.class);
+    private final Logger logger = LogManager.getLogger();
     @Autowired
     private final PageRepository pageRepository;
     @Autowired

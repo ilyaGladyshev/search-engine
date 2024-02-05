@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import searchengine.Application;
 import searchengine.config.CommonConfiguration;
 import searchengine.model.Page;
 
@@ -19,7 +18,7 @@ import java.util.concurrent.ForkJoinPool;
 @Scope("prototype")
 @RequiredArgsConstructor
 public class SiteIndexing extends Thread {
-    private final Logger logger = LogManager.getLogger(Application.class);
+    private final Logger logger = LogManager.getLogger();
     private final static int COUNT_PROCESSORS = Runtime.getRuntime().availableProcessors();
     @Autowired
     private final CommonConfiguration common;

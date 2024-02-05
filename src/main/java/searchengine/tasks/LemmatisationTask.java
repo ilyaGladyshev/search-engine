@@ -10,7 +10,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import searchengine.Application;
 import searchengine.config.CommonConfiguration;
 import searchengine.model.Index;
 import searchengine.model.Lemma;
@@ -31,7 +30,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class LemmatisationTask extends Thread {
     public Map<String, Integer> result = new HashMap<>();
-    private final Logger logger = LogManager.getLogger(Application.class);
+    private final Logger logger = LogManager.getLogger();
     @Autowired
     private final CommonConfiguration common;
     @Autowired

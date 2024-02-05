@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import searchengine.Application;
 import searchengine.config.Site;
 import searchengine.config.CommonConfiguration;
 import searchengine.model.Page;
@@ -28,7 +27,7 @@ import java.util.List;
 @Scope("prototype")
 @RequiredArgsConstructor
 public class IndexingServiceTask extends Thread {
-    private final Logger logger = LogManager.getLogger(Application.class);
+    private final Logger logger = LogManager.getLogger();
     @Autowired
     private final SiteRepository siteRepository;
     @Autowired
