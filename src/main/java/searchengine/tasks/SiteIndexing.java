@@ -19,12 +19,12 @@ import java.util.concurrent.ForkJoinPool;
 @Scope("prototype")
 @RequiredArgsConstructor
 public class SiteIndexing extends Thread {
-
     private final Logger logger = LogManager.getLogger(Application.class);
     private final static int COUNT_PROCESSORS = Runtime.getRuntime().availableProcessors();
     @Autowired
     private final CommonConfiguration common;
     private Page page;
+
     @Override
     public void run() {
         logger.log(Level.INFO, "Старт процесса индексации для сайта " + page.getSite().getUrl());

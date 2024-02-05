@@ -36,22 +36,17 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class SearchingServiceImpl implements SearchingService {
-
     private final static int SNIPPET_WORDS = 10;
     private final static int LEMMA_FREQUENCY = 15;
     private final static String FINAL_TAG_BEGIN = "<title>";
     private final static String FINAL_TAG_END = "</title>";
     private final static int TAG_TITLE_LENGTH = 7;
-
     private final CommonConfiguration common;
     private final Logger logger = LogManager.getLogger(Application.class);
-
     @Autowired
     private final LemmaRepository lemmaRepository;
-
     @Autowired
     private final SiteRepository siteRepository;
-
     @Autowired
     private final IndexRepository indexRepository;
     private PageContainer pageContainer;
@@ -98,6 +93,7 @@ public class SearchingServiceImpl implements SearchingService {
         page.setRelevance(index.getRank());
         pageContainer.getListPages().add(page);
     }
+
     private List<Lemma> getListLemmaModel(Map<String, Integer> listLemmas, String site) {
         List<Lemma> resultList = new ArrayList<>();
         listLemmas.keySet().forEach(l -> {
@@ -164,10 +160,10 @@ public class SearchingServiceImpl implements SearchingService {
                                      CommonLemmatisationHelper commonLemmatisationHelper, int foundedInd) {
         int index = 0;
         Map<String, Integer> listLemmasSearch = commonLemmatisationHelper.getLemmasByPageText(text);
-        for (String lemma: listLemmasSearch.keySet()) {
+        for (String lemma : listLemmasSearch.keySet()) {
             for (String word : words) {
                 Map<String, Integer> listLemmasWords = commonLemmatisationHelper.getLemmasByPageText(word);
-                for (String lemmaWord: listLemmasWords.keySet()) {
+                for (String lemmaWord : listLemmasWords.keySet()) {
                     if (lemmaWord.toLowerCase().equals(lemma)) {
                         foundedInd = index;
                         break;

@@ -16,11 +16,8 @@ import searchengine.services.StopIndexingService;
 @Service
 @RequiredArgsConstructor
 public class StopIndexingServiceImpl implements StopIndexingService {
-
     private final CommonConfiguration common;
-
     private final Logger logger = LogManager.getLogger(Application.class);
-
     @Autowired
     private final SiteRepository siteRepository;
 

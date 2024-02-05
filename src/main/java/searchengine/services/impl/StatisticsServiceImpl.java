@@ -22,20 +22,18 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
-
     private final CommonConfiguration common;
-
     @Autowired
     private final LemmaRepository lemmaRepository;
-
     @Autowired
     private final SiteRepository siteRepository;
-
     @Autowired
     private final PageRepository pageRepository;
+
     private String formatErrorData(String errorData) {
         return (errorData == null) ? "" : errorData;
     }
+
     @Override
     public StatisticsResponse getStatistics() {
         TotalStatistics total = new TotalStatistics();

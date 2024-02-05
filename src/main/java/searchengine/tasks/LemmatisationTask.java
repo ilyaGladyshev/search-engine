@@ -30,16 +30,12 @@ import java.util.Map;
 @Scope("prototype")
 @RequiredArgsConstructor
 public class LemmatisationTask extends Thread {
-
     public Map<String, Integer> result = new HashMap<>();
     private final Logger logger = LogManager.getLogger(Application.class);
-
     @Autowired
     private final CommonConfiguration common;
-
     @Autowired
     private final LemmaRepository lemmaRepository;
-
     @Autowired
     private final IndexRepository indexRepository;
     private Page page;

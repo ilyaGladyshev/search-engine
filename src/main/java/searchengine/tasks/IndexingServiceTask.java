@@ -28,12 +28,9 @@ import java.util.List;
 @Scope("prototype")
 @RequiredArgsConstructor
 public class IndexingServiceTask extends Thread {
-
     private final Logger logger = LogManager.getLogger(Application.class);
-
     @Autowired
     private final SiteRepository siteRepository;
-
     @Autowired
     private final CommonConfiguration common;
 

@@ -32,7 +32,6 @@ import java.util.concurrent.RecursiveAction;
 @Scope("prototype")
 @RequiredArgsConstructor
 public class ParseTask extends RecursiveAction {
-
     private final int PAUSE_DURATION = 500;
     private final int MEDIUMTEXT_LENGTH = 16777215;
     private final Logger logger = LogManager.getLogger(Application.class);
@@ -44,13 +43,10 @@ public class ParseTask extends RecursiveAction {
     private final char CHAR_CLIENT_ERROR = '4';
     private final List<ParseTask> taskList = new ArrayList<>();
     private Page page;
-
     @Autowired
     private final CommonConfiguration common;
-
     @Autowired
     private final SiteRepository siteRepository;
-
     @Autowired
     private final PageRepository pageRepository;
 

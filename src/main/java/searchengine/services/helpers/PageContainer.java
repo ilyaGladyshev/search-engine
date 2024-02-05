@@ -7,6 +7,5 @@ import java.util.List;
 
 @Getter
 public class PageContainer {
-
     private final List<PageHelper> listPages = new ArrayList<>();
 }

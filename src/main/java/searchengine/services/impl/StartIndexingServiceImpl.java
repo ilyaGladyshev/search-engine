@@ -14,7 +14,6 @@ import searchengine.tasks.IndexingServiceTask;
 @Service
 @RequiredArgsConstructor
 public class StartIndexingServiceImpl implements StartIndexingService {
-
     private final Logger logger = LogManager.getLogger(Application.class);
 
     @Lookup

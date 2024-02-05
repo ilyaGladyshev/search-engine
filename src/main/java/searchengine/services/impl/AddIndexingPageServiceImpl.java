@@ -28,13 +28,10 @@ import static java.net.URLDecoder.decode;
 @Service
 @RequiredArgsConstructor
 public class AddIndexingPageServiceImpl implements AddIndexingPageService {
-
     private final CommonConfiguration common;
     private final Logger logger = LogManager.getLogger(Application.class);
-
     @Autowired
     private final PageRepository pageRepository;
-
     @Autowired
     private final SiteRepository siteRepository;
 

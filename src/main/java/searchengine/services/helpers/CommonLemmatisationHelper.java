@@ -12,9 +12,7 @@ import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 public class CommonLemmatisationHelper {
-
     private final static String RUSSIAN_REG_EXP = "[а-яА-Я ]";
-
     private final LuceneMorphology luceneMorphology;
 
     public Map<String, Integer> getLemmasByPageText(String russianText) {
