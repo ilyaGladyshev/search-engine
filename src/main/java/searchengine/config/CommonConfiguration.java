@@ -11,8 +11,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import searchengine.model.Page;
-import searchengine.tasks.LemmatisationTask;
-import searchengine.tasks.ParseTask;
+import searchengine.task.LemmaTask;
+import searchengine.task.ParseTask;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,8 +28,8 @@ public class CommonConfiguration {
     private final static boolean IGNORE_CONTENT_TYPE = true;
     private final static boolean FOLLOW_REDIRECTS = false;
     private final static int PAUSE_DURATION = 15000;
-    private String USER_AGENT;
-    private String REFERRER;
+    private String userAgent;
+    private String referrer;
     private List<Site> sites;
     private List<ParseTask> listParseTasks = new ArrayList<>();
     private Boolean isInterrupt = false;
@@ -40,7 +40,7 @@ public class CommonConfiguration {
     }
 
     @Lookup
-    public LemmatisationTask createLemmatisationTask() {
+    public LemmaTask createLemmaTask() {
         return null;
     }
 
@@ -52,9 +52,9 @@ public class CommonConfiguration {
     public Connection getConnection(Page page) {
         return Jsoup.connect(page.getSite().getUrl() + page.getPath())
                 .ignoreHttpErrors(IGNORE_HTTP_ERRORS)
-                .userAgent(USER_AGENT)
+                .userAgent(userAgent)
                 .followRedirects(FOLLOW_REDIRECTS)
-                .referrer(REFERRER)
+                .referrer(referrer)
                 .ignoreContentType(IGNORE_CONTENT_TYPE)
                 .timeout(PAUSE_DURATION);
     }

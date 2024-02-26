@@ -10,8 +10,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
-import org.springframework.stereotype.Component;
 import searchengine.config.Site;
 
 import java.time.LocalDateTime;
@@ -20,8 +18,6 @@ import java.time.LocalDateTime;
 @Table(name = "site")
 @Setter
 @Getter
-@Component
-@ToString
 public class SiteModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

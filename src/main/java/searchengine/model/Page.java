@@ -12,10 +12,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
@@ -23,8 +21,6 @@ import java.io.IOException;
 @Table
 @Setter
 @Getter
-@Component
-@ToString
 public class Page {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

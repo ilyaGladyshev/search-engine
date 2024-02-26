@@ -17,8 +17,8 @@ logging:
   file:
     path: "logs/"
 indexing-settings:
-  USER_AGENT: "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
-  REFERRER: "www.yandex.com"
+  userAgent: "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
+  referrer: "www.yandex.com"
   sites:
   - url: https://lenta.ru
     name: Лента.ру
