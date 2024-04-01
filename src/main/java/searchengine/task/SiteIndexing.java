@@ -13,7 +13,6 @@ import searchengine.model.Page;
 
 import java.util.concurrent.ForkJoinPool;
 
-@SuppressWarnings("ALL")
 @Component
 @Setter
 @Scope("prototype")

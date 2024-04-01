@@ -8,36 +8,25 @@ import org.apache.lucene.morphology.LuceneMorphology;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.CommonConfiguration;
+import searchengine.model.*;
 import searchengine.response.searching.SearchingData;
 import searchengine.response.searching.SearchingDataComparator;
 import searchengine.response.searching.SearchingResponse;
-import searchengine.model.SiteModel;
-import searchengine.model.Lemma;
-import searchengine.model.Index;
-import searchengine.model.LemmaComparator;
 import searchengine.repository.IndexRepository;
 import searchengine.repository.LemmaRepository;
 import searchengine.repository.SiteRepository;
 import searchengine.service.SearchingService;
-import searchengine.service.helper.CommonLemmaHelper;
-import searchengine.service.helper.PageHelper;
-import searchengine.service.helper.PagesHelperComparator;
-import searchengine.service.helper.SnippetClass;
-import searchengine.service.helper.PageContainer;
+import searchengine.service.helper.*;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Service
 @RequiredArgsConstructor
 public class SearchingServiceImpl implements SearchingService {
     private final static int SNIPPET_WORDS = 10;
-    private final static int LEMMA_FREQUENCY = 15;
+    private final static int LEMMA_FREQUENCY = 100;
     private final static String FINAL_TAG_BEGIN = "<title>";
     private final static String FINAL_TAG_END = "</title>";
     private final static int TAG_TITLE_LENGTH = 7;
@@ -50,19 +39,22 @@ public class SearchingServiceImpl implements SearchingService {
     @Autowired
     private final IndexRepository indexRepository;
     private PageContainer pageContainer;
+    private List<SearchHelper> searchHelpers;
 
     @Override
-    public SearchingResponse searchingResponse(String query, int offset,
-                                               int limit, String site) {
+    public SearchingResponse searchingResponse(String query, int limit,
+                                               int offset, String site) {
+        searchHelpers = new ArrayList<>();
         SearchingResponse searchingResponse = new SearchingResponse();
-        logger.log(Level.INFO, "Начат поиск по ключевым словам " + query);
+        logger.log(Level.INFO, "Начат поиск по ключевым словам");
         try {
             LuceneMorphology luceneMorphology = common.luceneMorphology();
             CommonLemmaHelper commonLemmaHelper = new CommonLemmaHelper(luceneMorphology);
             Map<String, Integer> listLemmas = commonLemmaHelper.getLemmasByPageText(query);
-            List<Lemma> listLemmaModel = getListLemmaModel(listLemmas, site);
+            getListLemmaModel(listLemmas, site);
             pageContainer = new PageContainer();
-            searchingResponse = getSearchResponse(listLemmaModel);
+            sortListLemmaModel();
+            searchingResponse = getSearchResponse();
         } catch (Exception e) {
             searchingResponse.setResult(false);
             searchingResponse.setError("Задан некорректный поисковый запрос");
@@ -70,33 +62,48 @@ public class SearchingServiceImpl implements SearchingService {
         return searchingResponse;
     }
 
-    public String getTitle(String content) {
-        String result = "";
-        int start = content.indexOf(FINAL_TAG_BEGIN) + TAG_TITLE_LENGTH;
-        int fin = content.indexOf(FINAL_TAG_END);
-        try {
-            result = content.substring(start, fin);
-        } catch (Exception ignored) {
-            logger.log(Level.ERROR, "Ошибка при получении заголовка");
+    public void sortListLemmaModel(){
+        searchHelpers.forEach(SearchHelper::addListPage);
+        SearchHelperComparator searchHelperComparator = new SearchHelperComparator();
+        this.searchHelpers.sort(searchHelperComparator);
+        if (!searchHelpers.isEmpty()) {
+            List<PageHelper> sortResult = getUnitedResult();
+            sortResult.forEach(r -> pageContainer.getListPages().add(r));
+        }
+    }
+
+    private List<PageHelper> getUnitedResult() {
+        List<PageHelper> result = new ArrayList<>();
+        PagesHelperComparator pagesHelperComparator = new PagesHelperComparator();
+        List<PageHelper> tempResult = searchHelpers.get(0).getPageContainer();
+        this.searchHelpers.forEach(sh -> sh.getPageContainer().sort(pagesHelperComparator));
+        for (PageHelper ph : tempResult) {
+            boolean isFounded = true;
+            for (SearchHelper searchHelper : this.searchHelpers) {
+                int search = Collections.binarySearch(searchHelper.getPageContainer(), ph, pagesHelperComparator);
+                if (search < 0) {
+                    isFounded = false;
+                    break;
+                }
+            }
+            if (isFounded) {
+                result.add(ph);
+            }
         }
         return result;
     }
 
-    public void executeOldPage(PageHelper page, Lemma lemma, Index index) {
-        page.getListLemma().add(lemma);
-        page.getListIndex().add(index);
-        page.setRelevance(page.getRelevance() + index.getRank());
+    public String getTitle(String content) {
+        String result = "";
+        if (content.indexOf(FINAL_TAG_BEGIN)>0) {
+            int start = content.indexOf(FINAL_TAG_BEGIN) + TAG_TITLE_LENGTH;
+            int fin = content.indexOf(FINAL_TAG_END);
+            result = content.substring(start, fin);
+        }
+        return result;
     }
 
-    public void executeNewPage(PageHelper page, Lemma lemma, Index index) {
-        page.getListLemma().add(lemma);
-        page.getListIndex().add(index);
-        page.setRelevance(index.getRank());
-        pageContainer.getListPages().add(page);
-    }
-
-    private List<Lemma> getListLemmaModel(Map<String, Integer> listLemmas, String site) {
-        List<Lemma> resultList = new ArrayList<>();
+    private void getListLemmaModel(Map<String, Integer> listLemmas, String site) {
         listLemmas.keySet().forEach(l -> {
             List<Lemma> tempList;
             if (site == null) {
@@ -105,27 +112,26 @@ public class SearchingServiceImpl implements SearchingService {
                 SiteModel s = siteRepository.findAllByUrl(site).get(0);
                 tempList = lemmaRepository.findAllByLemmaAndSite_id(l, s.getId());
             }
-            tempList.stream().filter(t -> (t.getFrequency() < LEMMA_FREQUENCY))
-                    .forEach(resultList::add);
+            for(Lemma lemma:tempList){
+                if (lemma.getFrequency()<LEMMA_FREQUENCY){
+                    searchHelpers.add(new SearchHelper(lemma, indexRepository));
+                }
+            }
         });
-        return resultList;
     }
 
-    private SearchingResponse getSearchResponse(List<Lemma> lemmaList) throws IOException {
+    private SearchingResponse getSearchResponse() throws IOException {
         SearchingResponse searchingResponse = new SearchingResponse();
         searchingResponse.setResult(true);
         searchingResponse.setData(new ArrayList<>());
-        LemmaComparator comparator = new LemmaComparator();
-        lemmaList.sort(comparator);
-        findLemmaInPages(lemmaList, searchingResponse);
+        findLemmaInPages(searchingResponse);
         SearchingDataComparator dataComparator = new SearchingDataComparator();
         searchingResponse.getData().sort(dataComparator);
         return searchingResponse;
     }
 
-    private void findLemmaInPages(List<Lemma> lemmaList, SearchingResponse searchingResponse) throws IOException {
+    private void findLemmaInPages(SearchingResponse searchingResponse) throws IOException {
         int count = 0;
-        lemmaList.forEach(this::addListPage);
         CommonLemmaHelper commonLemmaHelper = new CommonLemmaHelper(common.luceneMorphology());
         long maxRelevance = getMaxRelevance();
         for (PageHelper pageHelper : pageContainer.getListPages()) {
@@ -134,15 +140,24 @@ public class SearchingServiceImpl implements SearchingService {
             for (Index i : pageHelper.getListIndex()) {
                 SnippetClass snippet = getSnippet(words, i.getLemma().getLemma());
                 double relevance = (double) pageHelper.getRelevance() / maxRelevance;
-                SearchingData data = new SearchingData(i.getPage().getSite().getUrl(),
-                        i.getPage().getSite().getName(), i.getPage().getPath(),
-                        snippet.text(), relevance, getTitle(i.getPage().getContent()));
+                SearchingData data = createSearchingData(i, snippet.text(), relevance);
                 searchingResponse.getData().add(data);
                 words = Arrays.copyOfRange(words, snippet.index(), words.length);
                 count++;
             }
         }
         searchingResponse.setCount(count);
+    }
+
+    private SearchingData createSearchingData(Index index, String text, double relevance){
+        SearchingData data =  new SearchingData();
+        data.setSite(index.getPage().getSite().getUrl());
+        data.setSiteName(index.getPage().getSite().getName());
+        data.setUri(index.getPage().getPath());
+        data.setSnippet(text);
+        data.setRelevance(relevance);
+        data.setTitle(getTitle(index.getPage().getContent()));
+        return data;
     }
 
     private SnippetClass getSnippet(String[] words, String text) throws IOException {
@@ -160,9 +175,9 @@ public class SearchingServiceImpl implements SearchingService {
 
     private static int getFoundedInd(String[] words, String text,
                                      CommonLemmaHelper commonLemmaHelper, int foundedInd) {
-        int index = 0;
         Map<String, Integer> listLemmasSearch = commonLemmaHelper.getLemmasByPageText(text);
         for (String lemma : listLemmasSearch.keySet()) {
+            int index = 0;
             for (String word : words) {
                 Map<String, Integer> listLemmasWords = commonLemmaHelper.getLemmasByPageText(word);
                 for (String lemmaWord : listLemmasWords.keySet()) {
@@ -175,23 +190,6 @@ public class SearchingServiceImpl implements SearchingService {
             }
         }
         return foundedInd;
-    }
-
-    private void addListPage(Lemma lemma) {
-        List<Index> listIndex = indexRepository.findAllByLemma_id(lemma.getId());
-        PagesHelperComparator comparator = new PagesHelperComparator();
-        listIndex.forEach(index -> {
-            if (index.getPage().getContent().toLowerCase().contains(lemma.getLemma())) {
-                PageHelper temp = new PageHelper(index.getPage());
-                pageContainer.getListPages().sort(comparator);
-                int i = Collections.binarySearch(pageContainer.getListPages(), temp, comparator);
-                if (i >= 0) {
-                    executeOldPage(pageContainer.getListPages().get(i), lemma, index);
-                } else {
-                    executeNewPage(temp, lemma, index);
-                }
-            }
-        });
     }
 
     private long getMaxRelevance() {

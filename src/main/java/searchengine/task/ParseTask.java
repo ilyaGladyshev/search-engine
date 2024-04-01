@@ -85,20 +85,22 @@ public class ParseTask extends RecursiveAction {
 
     @Override
     protected void compute() {
-        try {
-            logger.log(Level.INFO, "Парсинг страницы " + page.getSite().getUrl() + page.getPath());
-            pause(PAUSE_DURATION);
-            Connection connection = common.getConnection(page);
-            Document doc = connection.get();
-            Elements elements = doc.select(CSS_QUERY);
-            parsePage(elements);
-        } catch (IOException ex) {
-            page.getSite().renewError("Ошибка при открытии страницы");
-            siteRepository.save(page.getSite());
-            logger.log(Level.ERROR, "Ошибка при открытии страницы " + ex.getMessage());
-        }
         if (!(common.getIsInterrupt())) {
-            joinTasks(taskList);
+            try {
+                logger.log(Level.INFO, "Парсинг страницы " + page.getSite().getUrl() + page.getPath());
+                pause(PAUSE_DURATION);
+                Connection connection = common.getConnection(page);
+                Document doc = connection.get();
+                Elements elements = doc.select(CSS_QUERY);
+                parsePage(elements);
+            } catch (IOException ex) {
+                page.getSite().renewError("Ошибка при открытии страницы");
+                siteRepository.save(page.getSite());
+                logger.log(Level.ERROR, "Ошибка при открытии страницы " + ex.getMessage());
+            }
+            if (!(common.getIsInterrupt())) {
+                joinTasks(taskList);
+            }
         }
     }
 

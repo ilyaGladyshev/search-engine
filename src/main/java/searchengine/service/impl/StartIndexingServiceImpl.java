@@ -24,7 +24,6 @@ public class StartIndexingServiceImpl implements StartIndexingService {
     public CommonResponse indexing() {
         CommonResponse response = new CommonResponse();
         try {
-            logger.log(Level.INFO, "Начало индексации");
             IndexingServiceTask indexingServiceTask = createIndexingServiceTask();
             indexingServiceTask.start();
             response.setResult(true);

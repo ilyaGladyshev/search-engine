@@ -1,16 +1,13 @@
 package searchengine.response.searching;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 @Data
-@RequiredArgsConstructor
 public class SearchingData {
-    private final String site;
-    private final String siteName;
-    private final String uri;
-    private final String snippet;
-    private final double relevance;
-    private final String title;
-
+    private String site;
+    private String siteName;
+    private String uri;
+    private String snippet;
+    private double relevance;
+    private String title;
 }

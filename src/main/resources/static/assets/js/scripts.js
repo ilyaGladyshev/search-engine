@@ -1385,13 +1385,14 @@ var API = function(){
                     });
                     $(window).scrollTop(scroll);
                     $searchResults.addClass('SearchResult_ACTIVE');
-                    if (result.count > data.offset + result.data.length) {
+                    //if (result.count > data.offset + result.data.length) {
+                    if (result.count > data.offset) {
                         $('.SearchResult-footer').removeClass('SearchResult-footer_hide')
                         $('.SearchResult-footer button[data-send="search"]')
                             .data('sendoffset', data.offset + result.data.length)
                             .data('searchquery', data.query)
                             .data('searchsite', data.site)
-                            .data('sendlimit', data.limit);
+                            .data('sendlimit',  data.limit);
                         $('.SearchResult-remain').text('(' + (result.count - data.offset - result.data.length) + ')')
                     } else {
                         $('.SearchResult-footer').addClass('SearchResult-footer_hide')
@@ -1570,7 +1571,6 @@ var API = function(){
                 if (($this.hasClass('form') && e.type==='submit')
                     || (e.type==='click' && !$this.hasClass('form'))){
                     e.preventDefault();
-                    
                     switch ($this.data('send')) {
                         case 'indexPage':
                             var $page = $this.closest('.form').find('input[name="page"]');
