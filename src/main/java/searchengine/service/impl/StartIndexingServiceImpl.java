@@ -1,7 +1,6 @@
 package searchengine.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Lookup;
@@ -13,7 +12,6 @@ import searchengine.task.IndexingServiceTask;
 @Service
 @RequiredArgsConstructor
 public class StartIndexingServiceImpl implements StartIndexingService {
-    private final static Logger logger = LogManager.getLogger(StartIndexingServiceImpl.class);
 
     @Lookup
     public IndexingServiceTask createIndexingServiceTask() {
