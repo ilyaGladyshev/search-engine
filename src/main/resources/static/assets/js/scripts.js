@@ -1367,12 +1367,12 @@ var API = function(){
                     }
                     var $searchResults = $('.SearchResult'),
                         $content = $searchResults.find('.SearchResult-content');
-                    if (data.offset === 0) {
+                    //if (data.offset === 0) {
                         $content.empty();
-                    }
+                    //}
                     $searchResults.find('.SearchResult-amount').text(result.count);
                     var scroll = $(window).scrollTop();
-                    result.data.forEach(function(page){
+                    /*result.data.forEach(function(page){
                         $content.append('<div class="SearchResult-block">' +
                             '<a href="' + page.site + page.uri +'" target="_blank" class="SearchResult-siteTitle">' +
                                 (!data.siteName ? page.siteName + ' - ': '') +
@@ -1382,18 +1382,35 @@ var API = function(){
                                 page.snippet +
                             '</div>' +
                         '</div>')
-                    });
+                    });*/
+                    let i = 1;
+                    result.data.forEach(function(page){
+                         if ((i <= data.offset + data.limit) && (i <= result.count)){
+                             $content.append('<div class="SearchResult-block">' +
+                                 '<a href="' + page.site + page.uri +'" target="_blank" class="SearchResult-siteTitle">' +
+                                     (!data.siteName ? page.siteName + ' - ': '') +
+                                     page.title +
+                                 '</a>' +
+                                 '<div class="SearchResult-description">' +
+                                     page.snippet +
+                                 '</div>' +
+                             '</div>')
+                             }
+                         i++;
+                     })
                     $(window).scrollTop(scroll);
                     $searchResults.addClass('SearchResult_ACTIVE');
                     //if (result.count > data.offset + result.data.length) {
-                    if (result.count > data.offset) {
+                    if (result.count > data.limit + data.offset) {
                         $('.SearchResult-footer').removeClass('SearchResult-footer_hide')
                         $('.SearchResult-footer button[data-send="search"]')
-                            .data('sendoffset', data.offset + result.data.length)
+                            //.data('sendoffset', data.offset + result.data.length)
+                            .data('sendoffset', data.limit + data.offset)
                             .data('searchquery', data.query)
                             .data('searchsite', data.site)
                             .data('sendlimit',  data.limit);
-                        $('.SearchResult-remain').text('(' + (result.count - data.offset - result.data.length) + ')')
+                        //$('.SearchResult-remain').text('(' + (result.count - data.offset - result.data.length) + ')')
+                        $('.SearchResult-remain').text('(' + (result.count - data.limit - data.offset) + ')')
                     } else {
                         $('.SearchResult-footer').addClass('SearchResult-footer_hide')
                     }

@@ -26,7 +26,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class SearchingServiceImpl implements SearchingService {
     private final static int SNIPPET_WORDS = 10;
-    private final static int LEMMA_FREQUENCY = 100;
+    private final static int LEMMA_FREQUENCY = 500;
     private final static String FINAL_TAG_BEGIN = "<title>";
     private final static String FINAL_TAG_END = "</title>";
     private final static int TAG_TITLE_LENGTH = 7;
@@ -39,12 +39,12 @@ public class SearchingServiceImpl implements SearchingService {
     @Autowired
     private final IndexRepository indexRepository;
     private PageContainer pageContainer;
-    private List<SearchHelper> searchHelpers;
+    private List<Parent> parentList = new ArrayList<>();
 
     @Override
     public SearchingResponse searchingResponse(String query, int limit,
                                                int offset, String site) {
-        searchHelpers = new ArrayList<>();
+        parentList = new ArrayList<>();
         SearchingResponse searchingResponse = new SearchingResponse();
         logger.log(Level.INFO, "Начат поиск по ключевым словам");
         try {
@@ -63,24 +63,29 @@ public class SearchingServiceImpl implements SearchingService {
     }
 
     public void sortListLemmaModel(){
-        searchHelpers.forEach(SearchHelper::addListPage);
-        SearchHelperComparator searchHelperComparator = new SearchHelperComparator();
-        this.searchHelpers.sort(searchHelperComparator);
-        if (!searchHelpers.isEmpty()) {
+        parentList.forEach(parent -> parent.getSearchHelpers().
+                forEach(SearchHelper::addListPage));
+        ParentComparator parentComparator = new ParentComparator();
+        this.parentList.sort(parentComparator);
+        if (!parentList.isEmpty()) {
             List<PageHelper> sortResult = getUnitedResult();
             sortResult.forEach(r -> pageContainer.getListPages().add(r));
         }
     }
 
     private List<PageHelper> getUnitedResult() {
-        List<PageHelper> result = new ArrayList<>();
         PagesHelperComparator pagesHelperComparator = new PagesHelperComparator();
-        List<PageHelper> tempResult = searchHelpers.get(0).getPageContainer();
-        this.searchHelpers.forEach(sh -> sh.getPageContainer().sort(pagesHelperComparator));
+        List<PageHelper> tempResult = parentList.get(0).getPageContainer();
+        parentList.forEach(parent -> parent.getPageContainer().sort(pagesHelperComparator));
+        return compareLemma(tempResult, pagesHelperComparator);
+    }
+
+    private List<PageHelper> compareLemma(List<PageHelper> tempResult, PagesHelperComparator pagesHelperComparator) {
+        List<PageHelper> result = new ArrayList<>();
         for (PageHelper ph : tempResult) {
             boolean isFounded = true;
-            for (SearchHelper searchHelper : this.searchHelpers) {
-                int search = Collections.binarySearch(searchHelper.getPageContainer(), ph, pagesHelperComparator);
+            for (Parent parent : this.parentList) {
+                int search = Collections.binarySearch(parent.getPageContainer(), ph, pagesHelperComparator);
                 if (search < 0) {
                     isFounded = false;
                     break;
@@ -105,6 +110,7 @@ public class SearchingServiceImpl implements SearchingService {
 
     private void getListLemmaModel(Map<String, Integer> listLemmas, String site) {
         listLemmas.keySet().forEach(l -> {
+            Parent parent = new Parent(l);
             List<Lemma> tempList;
             if (site == null) {
                 tempList = lemmaRepository.findAllByLemma(l);
@@ -114,9 +120,10 @@ public class SearchingServiceImpl implements SearchingService {
             }
             for(Lemma lemma:tempList){
                 if (lemma.getFrequency()<LEMMA_FREQUENCY){
-                    searchHelpers.add(new SearchHelper(lemma, indexRepository));
+                    parent.getSearchHelpers().add(new SearchHelper(lemma, indexRepository, parent));
                 }
             }
+            parentList.add(parent);
         });
     }
 
