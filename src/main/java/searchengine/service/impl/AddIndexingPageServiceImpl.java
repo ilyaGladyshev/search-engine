@@ -39,13 +39,11 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
     }
 
     private String checkPageByRootSite(String url) {
-        String result = "";
-        for (Site s : common.getSites()) {
-            if (url.contains(s.getUrl())) {
-                result = s.getUrl();
-            }
-        }
-        return result;
+        return common.getSites().stream()
+                .map(Site::getUrl)
+                .filter(url::contains)
+                .findFirst()
+                .orElse();
     }
 
     @Transactional

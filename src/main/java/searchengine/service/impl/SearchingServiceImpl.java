@@ -69,7 +69,7 @@ public class SearchingServiceImpl implements SearchingService {
         this.parentList.sort(parentComparator);
         if (!parentList.isEmpty()) {
             List<PageHelper> sortResult = getUnitedResult();
-            sortResult.forEach(r -> pageContainer.getListPages().add(r));
+            pageContainer.getListPages().addAll(sortResult);
         }
     }
 
@@ -81,21 +81,11 @@ public class SearchingServiceImpl implements SearchingService {
     }
 
     private List<PageHelper> compareLemma(List<PageHelper> tempResult, PagesHelperComparator pagesHelperComparator) {
-        List<PageHelper> result = new ArrayList<>();
-        for (PageHelper ph : tempResult) {
-            boolean isFounded = true;
-            for (Parent parent : this.parentList) {
-                int search = Collections.binarySearch(parent.getPageContainer(), ph, pagesHelperComparator);
-                if (search < 0) {
-                    isFounded = false;
-                    break;
-                }
-            }
-            if (isFounded) {
-                result.add(ph);
-            }
-        }
-        return result;
+        return tempResult.stream()
+                .filter(ph -> parentList.stream()
+                        .allMatch(parent -> Collections.binarySearch(
+                                parent.getContainer(), ph, pagesHelperComparator)  > 0))
+                .toList();
     }
 
     public String getTitle(String content) {
@@ -118,11 +108,10 @@ public class SearchingServiceImpl implements SearchingService {
                 SiteModel s = siteRepository.findAllByUrl(site).get(0);
                 tempList = lemmaRepository.findAllByLemmaAndSite_id(l, s.getId());
             }
-            for(Lemma lemma:tempList){
-                if (lemma.getFrequency()<LEMMA_FREQUENCY){
-                    parent.getSearchHelpers().add(new SearchHelper(lemma, indexRepository, parent));
-                }
-            }
+            tempList.strem()
+                    .filter(lemma -> lemma.getFrequency() < LEMMA_FREQUENCY)
+                    .map(lemma -> new SearchHelper(lemma, indexRepository, parent))
+                    .forEach(parent.getSearchHelpers() :: add);
             parentList.add(parent);
         });
     }
@@ -174,9 +163,9 @@ public class SearchingServiceImpl implements SearchingService {
         foundedInd = getFoundedInd(words, text, commonLemmaHelper, foundedInd);
         int start = foundedInd - SNIPPET_WORDS > 0 ? foundedInd - TAG_TITLE_LENGTH : 0;
         int fin = foundedInd + SNIPPET_WORDS < words.length ? foundedInd + TAG_TITLE_LENGTH : words.length;
-        for (int i = start; i < fin; i++) {
-            str += i != foundedInd ? " " + words[i] : " <b>" + words[i] + "</b>";
-        }
+        String snippet = IntStream.range(start, fin)
+                .mapToObj(i -> i != foundedInd ? words[i] : "<b>" + words[i] + "</b>")
+                .collect(Collectors.joining(" "));
         return new SnippetClass(str.substring(1), foundedInd);
     }
 
@@ -200,12 +189,9 @@ public class SearchingServiceImpl implements SearchingService {
     }
 
     private long getMaxRelevance() {
-        long result = 0;
-        for (PageHelper pageHelper : pageContainer.getListPages()) {
-            if (pageHelper.getRelevance() > result) {
-                result = pageHelper.getRelevance();
-            }
-        }
-        return result;
+        return pageContainer.getListPages().stream()
+                .mapToLong(PageHelper::getRelevance)
+                .max()
+                .orElse(0);
     }
 }
