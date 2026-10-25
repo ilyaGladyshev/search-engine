@@ -4,7 +4,7 @@ server:
 spring:
   datasource:
     username: root
-    password: testtest
+    password: your_password
     url: jdbc:mysql://localhost:3306/search_engine?useSSL=false&requireSSL=false&allowPublicKeyRetrieval=true
   jpa:
     properties:
