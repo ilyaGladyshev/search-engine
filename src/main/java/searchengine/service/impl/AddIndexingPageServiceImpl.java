@@ -43,7 +43,7 @@ public class AddIndexingPageServiceImpl implements AddIndexingPageService {
                 .map(Site::getUrl)
                 .filter(url::contains)
                 .findFirst()
-                .orElse();
+                .orElse("");
     }
 
     @Transactional

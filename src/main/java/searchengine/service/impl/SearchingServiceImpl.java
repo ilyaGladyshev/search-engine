@@ -20,6 +20,8 @@ import searchengine.service.helper.*;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 @Service
@@ -84,7 +86,7 @@ public class SearchingServiceImpl implements SearchingService {
         return tempResult.stream()
                 .filter(ph -> parentList.stream()
                         .allMatch(parent -> Collections.binarySearch(
-                                parent.getContainer(), ph, pagesHelperComparator)  > 0))
+                                parent.getPageContainer(), ph, pagesHelperComparator)  >= 0))
                 .toList();
     }
 
@@ -108,7 +110,7 @@ public class SearchingServiceImpl implements SearchingService {
                 SiteModel s = siteRepository.findAllByUrl(site).get(0);
                 tempList = lemmaRepository.findAllByLemmaAndSite_id(l, s.getId());
             }
-            tempList.strem()
+            tempList.stream()
                     .filter(lemma -> lemma.getFrequency() < LEMMA_FREQUENCY)
                     .map(lemma -> new SearchHelper(lemma, indexRepository, parent))
                     .forEach(parent.getSearchHelpers() :: add);
@@ -157,16 +159,16 @@ public class SearchingServiceImpl implements SearchingService {
     }
 
     private SnippetClass getSnippet(String[] words, String text) throws IOException {
-        String str = "";
         int foundedInd = 0;
         CommonLemmaHelper commonLemmaHelper = new CommonLemmaHelper(common.luceneMorphology());
         foundedInd = getFoundedInd(words, text, commonLemmaHelper, foundedInd);
         int start = foundedInd - SNIPPET_WORDS > 0 ? foundedInd - TAG_TITLE_LENGTH : 0;
         int fin = foundedInd + SNIPPET_WORDS < words.length ? foundedInd + TAG_TITLE_LENGTH : words.length;
+        int finalFoundedInd = foundedInd;
         String snippet = IntStream.range(start, fin)
-                .mapToObj(i -> i != foundedInd ? words[i] : "<b>" + words[i] + "</b>")
+                .mapToObj(i -> i != finalFoundedInd ? words[i] : "<b>" + words[i] + "</b>")
                 .collect(Collectors.joining(" "));
-        return new SnippetClass(str.substring(1), foundedInd);
+        return new SnippetClass(snippet, foundedInd);
     }
 
     private static int getFoundedInd(String[] words, String text,
